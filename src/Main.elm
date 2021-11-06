@@ -28,6 +28,9 @@ main =
 type alias Cronstruct = (Cron.Cron, String)
 
 
+type alias TimeCell = (Int, Int)
+
+
 type LineError
     = LineError Int String
 
@@ -128,7 +131,7 @@ view : Model -> Html.Html Msg
 view model =
     Html.div
         [ Attrs.css
-            [ Css.fontFamily Css.sansSerif
+            [ Css.fontFamily Css.monospace
             , Css.displayFlex
             , Css.flexDirection Css.column
             , Css.alignItems Css.center
@@ -164,6 +167,27 @@ view model =
         ]
 
 
+gridTemplate : Int -> Int -> Css.Style
+gridTemplate columns rows =
+    Css.batch
+        [ Css.property "--columns" (String.fromInt columns)
+        , Css.property "--rows" (String.fromInt rows)
+        , Css.property "display" "grid"
+        , Css.property "row-gap" "1px"
+        , Css.property "grid-template-columns" "200px repeat(var(--columns), 1fr)"
+        , Css.property "grid-template-rows" "repeat(var(--rows), 1lh)"
+        ]
+
+
+gridCellTemplate : Int -> Int -> Int -> Css.Style
+gridCellTemplate rowNumber columnStart columnEnd =
+    Css.batch
+        [ Css.property "grid-row" (String.fromInt rowNumber)
+        , Css.property "grid-column-start" (String.fromInt columnStart)
+        , Css.property "grid-column-end" (String.fromInt columnEnd)
+        ] 
+
+
 parseResult : Result (List LineError) (List Cronstruct) -> Html.Html Msg
 parseResult result =
     case result of
@@ -184,78 +208,96 @@ errorMessage errors =
         Html.pre [] [ Html.text rendered ]
 
 
-gridTemplate : Int -> Int -> Css.Style
-gridTemplate columns rows =
-    Css.batch
-        [ Css.property "--columns" (String.fromInt columns)
-        , Css.property "--rows" (String.fromInt rows)
-        , Css.property "display" "grid"
-        , Css.property "row-gap" "1px"
-        , Css.property "grid-template-columns" "200px repeat(var(--columns), 1fr)"
-        , Css.property "grid-template-rows" "repeat(var(--rows), 1lh)"
-        ]
-
-
 cronSchedule : List Cronstruct -> Html.Html Msg
 cronSchedule cronstructs =
     let
-        rows = List.length cronstructs
-        cols = 24 * 60 // 15  -- one day with a division value of 15 minutes
+        scaleValue = 15 -- minutes per grid cell
+        columnsNumber = 24 * 60 // scaleValue -- currently only one day is supported
+        rowsNumber = List.length cronstructs
     in
         Html.div
-            [ Attrs.css [ Css.width (Css.vw 90), gridTemplate cols rows ] ]
-            (List.concat (List.indexedMap (scheduleRow 15) cronstructs))
+            [ Attrs.css
+                [ Css.width (Css.vw 90)
+                , gridTemplate columnsNumber rowsNumber
+                ]
+            ]
+            (List.concat (List.indexedMap (cronScheduleRow scaleValue) cronstructs))
 
 
-scheduleRow : Int -> Int -> Cronstruct -> List (Html.Html Msg)
-scheduleRow divisionValue rowNumber (rule, command) =
-    scheduleCommand (rowNumber + 1) command :: scheduleTicks divisionValue (rowNumber + 1) rule
-
-
-scheduleCommand : Int -> String -> Html.Html Msg
-scheduleCommand rowNumber command =
+cronScheduleCommandCell : Int -> String -> Html.Html Msg
+cronScheduleCommandCell rowNumber command =
     Html.span
-        [ Attrs.css [ Css.property "grid-row" (String.fromInt rowNumber) ] ]
+        [ Attrs.css [ gridCellTemplate rowNumber 1 1 ] ]
         [ Html.text command ]
 
 
-gridCell : Int -> (Int, Int) -> Html.Html Msg
-gridCell rowNumber (start, end) =
+cronScheduleTimeCell : Int -> TimeCell -> Html.Html Msg
+cronScheduleTimeCell rowNumber (columnStart, columnEnd) =
     Html.div
         [ Attrs.css
-            [ Css.property "grid-row" (String.fromInt rowNumber)
-            , Css.property "grid-column-start" (String.fromInt start)
-            , Css.property "grid-column-end" (String.fromInt end)
-            , Css.backgroundColor (Css.hex "55af6a")
-            ] 
+            [ gridCellTemplate rowNumber columnStart columnEnd
+            , Css.backgroundColor (Css.hex "888888")
+            ]
         ]
         []
 
 
-scheduleTicks : Int -> Int -> Cron.Cron -> List (Html.Html Msg)
-scheduleTicks divisionValue rowNumber (Cron.Cron m h dm mo dw) =
-    minuteTicks (60 // divisionValue) m
-    |> hourTicks (60 // divisionValue) h
-    |> List.map (gridCell rowNumber)
-
-
-minuteTicks : Int -> Cron.Expr Int -> List (Int, Int)
-minuteTicks cells expr =
-    (1, 1) :: []
-
-
-hourTicks : Int -> Cron.Expr Int -> List (Int, Int) -> List (Int, Int)
-hourTicks cells expr ticks =
+cronScheduleRow : Int -> Int -> Cronstruct -> List (Html.Html Msg)
+cronScheduleRow scaleValue offset (rule, command) =
     let
-        offsets = List.range 0 23 |> List.map ((*) cells) |> List.map ((+) 1)
+        commandCell = cronScheduleCommandCell (offset + 1) command
+        ruleCells = 
+            timeCells scaleValue rule
+                |> List.map (cronScheduleTimeCell (offset + 1))
     in
-        ticks
+        commandCell :: ruleCells
+
+
+
+-- TIME CELLS
+
+
+timeCells : Int -> Cron.Cron -> List TimeCell
+timeCells scaleValue (Cron.Cron m h dm mo dw) =
+    -- currently only one day is supported
+    minuteTicks scaleValue m |> hourTicks scaleValue h
+
+
+minuteTicks : Int -> Cron.Expr Int -> List TimeCell
+minuteTicks scaleValue expr =
+    case expr of
+        Cron.Single term ->
+            termTicks scaleValue term
+        Cron.Multiple terms ->
+            List.concat (List.map (termTicks scaleValue) terms)
+        Cron.Every ->
+            List.map (\x -> Tuple.pair x x) (List.range 1 (60 // scaleValue))
+
+
+hourTicks : Int -> Cron.Expr Int -> List TimeCell -> List TimeCell
+hourTicks scaleValue expr cells =
+    let
+        cellsPerHour = 60 // scaleValue
+        offsets = List.range 0 23 |> List.map ((*) cellsPerHour) |> List.map ((+) 1)
+    in
+        cells
             |> List.repeat 24
             |> List.map2 offsetTicks offsets
             |> List.concat
 
 
-offsetTicks : Int -> List (Int, Int) -> List (Int, Int)
+termTicks : Int -> Cron.Term a -> List TimeCell
+termTicks scaleValue term =
+    case term of
+        Cron.Step start step ->
+            Debug.todo "Implement Cron.Step start step"
+        Cron.EveryStep step ->
+            Debug.todo "Implement Cron.EveryStep step"
+        Cron.Atom start ->
+            Debug.todo "Implement Cron.Atom start"
+
+
+offsetTicks : Int -> List TimeCell -> List TimeCell
 offsetTicks offset ticks =
     let
         fn = (+) offset
