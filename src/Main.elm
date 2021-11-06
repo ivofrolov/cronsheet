@@ -25,31 +25,28 @@ main =
 -- MODEL
 
 
-type alias Crontab = String
+type alias Cronstruct = (Cron.Cron, String)
 
 
-type alias Command = String
-
-
-type alias Cronstruct = (Cron.Cron, Command)
-
-
-type ParseError
-    = LineError String
-    | TextError Int String
+type LineError
+    = LineError Int String
 
 
 type alias Model =
-    { crontab : Crontab
-    , cronstruct : Result (List ParseError) (List Cronstruct)
+    { crontab : String
+    , cronstruct : Result (List LineError) (List Cronstruct)
     }
 
 
-init : () -> ( Model, Cmd Msg )
+init : () -> (Model, Cmd Msg)
 init _ =
-    ( { crontab = "* * * * * root reboot\n* * * * * user ping", cronstruct = Ok [] }
-    , Cmd.none
-    )
+    let
+        initialModel =
+            { crontab = "* * * * * root reboot\n* * * * * user ping"
+            , cronstruct = Ok []
+            }
+    in
+        (initialModel, Cmd.none)
 
 
 
@@ -57,21 +54,21 @@ init _ =
 
 
 type Msg
-    = Enter String
+    = Input String
     | Parse
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
     case msg of
-        Enter newContent ->
-            ( { model | crontab = newContent }, Cmd.none )
+        Input newContent ->
+            ({ model | crontab = newContent }, Cmd.none)
 
         Parse ->
-            ( { model | cronstruct = (parseCrontab model.crontab) }, Cmd.none )
+            ({ model | cronstruct = (parseCrontab model.crontab) }, Cmd.none)
 
 
-parseCrontab : String -> Result (List ParseError) (List Cronstruct)
+parseCrontab : String -> Result (List LineError) (List Cronstruct)
 parseCrontab crontab = 
     let
         (errors, values) = partitionByError (List.map parseCronline (String.lines crontab))
@@ -82,45 +79,46 @@ parseCrontab crontab =
             Err errors
 
 
-parseCronline : String -> Result ParseError Cronstruct
+parseCronline : String -> Result String Cronstruct
 parseCronline cronline =
     let
-        cronrule = parseCronRule cronline
+        rule = parseCronRule cronline
         command = parseCronCommand cronline
     in
-        Result.map2 Tuple.pair cronrule command
+        Result.map2 Tuple.pair rule command
 
 
-parseCronRule : String -> Result ParseError Cron.Cron
+parseCronRule : String -> Result String Cron.Cron
 parseCronRule cronline =
     let
-        cronrule = String.join " " (List.take 5 (String.words cronline))
+        cronstring = String.join " " (List.take 5 (String.words cronline))
     in
-        case Cron.fromString cronrule of
-            Ok cron -> Ok cron
-            Err errors -> Err (LineError "Invalid cron rule.")
+        Result.mapError (\_ -> "Invalid cron string.") (Cron.fromString cronstring)
 
 
-parseCronCommand : String -> Result ParseError Command
+parseCronCommand : String -> Result String String
 parseCronCommand cronline =
     let
         command = String.join " " (List.drop 6 (String.words cronline))
     in
         if String.isEmpty command then
-            Err (LineError "No command specified.")
+            Err "No command specified."
         else
             Ok command
 
 
-partitionByError : List (Result error value) -> (List error, List value)
-partitionByError list = 
+partitionByError : List (Result String value) -> (List LineError, List value)
+partitionByError list =
     let
-        step x (errors, values) =
+        step (i, x) (errors, values) =
             case x of
                 Ok value -> (errors, value :: values)
-                Err error -> (error :: errors, values)
+                Err error -> (LineError (i + 1) error :: errors, values)
     in
-        List.foldr step ([], []) list
+        list
+            |> List.indexedMap Tuple.pair
+            |> List.foldr step ([], [])
+
 
 
 -- VIEW
@@ -150,7 +148,7 @@ view model =
                 , Attrs.wrap "off"
                 , Attrs.placeholder "Paste your crontab here"
                 , Attrs.value model.crontab
-                , Events.onInput Enter
+                , Events.onInput Input
                 ]
                 []
             , Html.button
@@ -166,16 +164,24 @@ view model =
         ]
 
 
-parseResult : Result (List ParseError) (List Cronstruct) -> Html.Html Msg
+parseResult : Result (List LineError) (List Cronstruct) -> Html.Html Msg
 parseResult result =
     case result of
         Ok value -> cronSchedule value
         Err error -> errorMessage error
 
 
-errorMessage : List ParseError -> Html.Html Msg
+errorMessage : List LineError -> Html.Html Msg
 errorMessage errors =
-    Html.pre [] [ Html.text "Render error" ]
+    let
+        toString (LineError idx err) =
+            String.join ": " [ String.fromInt idx, err ]
+        rendered =
+            errors
+                |> List.map toString
+                |> String.join "\n"
+    in
+        Html.pre [] [ Html.text rendered ]
 
 
 gridTemplate : Int -> Int -> Css.Style
@@ -184,6 +190,7 @@ gridTemplate columns rows =
         [ Css.property "--columns" (String.fromInt columns)
         , Css.property "--rows" (String.fromInt rows)
         , Css.property "display" "grid"
+        , Css.property "row-gap" "1px"
         , Css.property "grid-template-columns" "200px repeat(var(--columns), 1fr)"
         , Css.property "grid-template-rows" "repeat(var(--rows), 1lh)"
         ]
