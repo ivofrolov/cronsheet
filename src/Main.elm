@@ -163,12 +163,12 @@ view model =
                 [ Html.text "Parse" ]
             ]
         , Html.pre [] [ Html.text (Debug.toString model.cronstruct) ]
-        , parseResult model.cronstruct
+        , renderResult model.cronstruct
         ]
 
 
-gridTemplate : Int -> Int -> Css.Style
-gridTemplate columns rows =
+gridStyle : Int -> Int -> Css.Style
+gridStyle columns rows =
     Css.batch
         [ Css.property "--columns" (String.fromInt columns)
         , Css.property "--rows" (String.fromInt rows)
@@ -179,8 +179,8 @@ gridTemplate columns rows =
         ]
 
 
-gridCellTemplate : Int -> Int -> Int -> Css.Style
-gridCellTemplate rowNumber columnStart columnEnd =
+gridCellStyle : Int -> Int -> Int -> Css.Style
+gridCellStyle rowNumber columnStart columnEnd =
     Css.batch
         [ Css.property "grid-row" (String.fromInt rowNumber)
         , Css.property "grid-column-start" (String.fromInt columnStart)
@@ -188,79 +188,83 @@ gridCellTemplate rowNumber columnStart columnEnd =
         ] 
 
 
-parseResult : Result (List LineError) (List Cronstruct) -> Html.Html Msg
-parseResult result =
-    case result of
-        Ok value -> cronSchedule value
-        Err error -> errorMessage error
-
-
-errorMessage : List LineError -> Html.Html Msg
-errorMessage errors =
-    let
-        toString (LineError idx err) =
-            String.join ": " [ String.fromInt idx, err ]
-        rendered =
-            errors
-                |> List.map toString
-                |> String.join "\n"
-    in
-        Html.pre [] [ Html.text rendered ]
-
-
-cronSchedule : List Cronstruct -> Html.Html Msg
-cronSchedule cronstructs =
+renderResult : Result (List LineError) (List Cronstruct) -> Html.Html Msg
+renderResult result =
     let
         scaleValue = 15 -- minutes per grid cell
+        extractSchedule (rule, command) = (command, generateTimeCells scaleValue rule)
+    in
+        case result of
+            Ok values ->
+                renderCronSchedule scaleValue (List.map extractSchedule values)
+            Err errors ->
+                renderErrors (List.map extractErrorMessage errors)
+
+
+renderErrors : List String -> Html.Html Msg
+renderErrors errors =
+    Html.pre [] [ Html.text (String.join "\n" errors) ]
+
+
+renderCronSchedule : Int -> List (String, List TimeCell) -> Html.Html Msg
+renderCronSchedule scaleValue rows =
+    let
         columnsNumber = 24 * 60 // scaleValue -- currently only one day is supported
-        rowsNumber = List.length cronstructs
+        rowsNumber = List.length rows
+        body =
+            rows
+                |> List.map2 (\x (y, z) -> renderCronScheduleRow x y z) (List.range 1 rowsNumber)
+                |> List.concat
     in
         Html.div
             [ Attrs.css
                 [ Css.width (Css.vw 90)
-                , gridTemplate columnsNumber rowsNumber
+                , gridStyle columnsNumber rowsNumber
                 ]
             ]
-            (List.concat (List.indexedMap (cronScheduleRow scaleValue) cronstructs))
+            body
 
 
-cronScheduleCommandCell : Int -> String -> Html.Html Msg
-cronScheduleCommandCell rowNumber command =
+renderCronScheduleRow : Int -> String -> List TimeCell -> List (Html.Html Msg)
+renderCronScheduleRow rowNumber command timeCells =
+    let
+        renderedCommand = renderCronScheduleCommandCell rowNumber command
+        renderedTime = List.map (renderCronScheduleTimeCell rowNumber) timeCells
+    in
+        renderedCommand :: renderedTime
+
+
+renderCronScheduleCommandCell : Int -> String -> Html.Html Msg
+renderCronScheduleCommandCell rowNumber command =
     Html.span
-        [ Attrs.css [ gridCellTemplate rowNumber 1 1 ] ]
+        [ Attrs.css [ gridCellStyle rowNumber 1 1 ] ]
         [ Html.text command ]
 
 
-cronScheduleTimeCell : Int -> TimeCell -> Html.Html Msg
-cronScheduleTimeCell rowNumber (columnStart, columnEnd) =
+renderCronScheduleTimeCell : Int -> TimeCell -> Html.Html Msg
+renderCronScheduleTimeCell rowNumber (columnStart, columnEnd) =
     Html.div
         [ Attrs.css
-            [ gridCellTemplate rowNumber columnStart columnEnd
+            [ gridCellStyle rowNumber columnStart columnEnd
             , Css.backgroundColor (Css.hex "888888")
             ]
         ]
         []
 
 
-cronScheduleRow : Int -> Int -> Cronstruct -> List (Html.Html Msg)
-cronScheduleRow scaleValue offset (rule, command) =
-    let
-        commandCell = cronScheduleCommandCell (offset + 1) command
-        ruleCells = 
-            timeCells scaleValue rule
-                |> List.map (cronScheduleTimeCell (offset + 1))
-    in
-        commandCell :: ruleCells
+extractErrorMessage : LineError -> String
+extractErrorMessage (LineError line message) =
+    String.join ": " [ String.fromInt line, message ]
+
+
+generateTimeCells : Int -> Cron.Cron -> List TimeCell
+generateTimeCells scaleValue (Cron.Cron m h dm mo dw) =
+    -- currently only one day is supported
+    minuteTicks scaleValue m |> hourTicks scaleValue h
 
 
 
 -- TIME CELLS
-
-
-timeCells : Int -> Cron.Cron -> List TimeCell
-timeCells scaleValue (Cron.Cron m h dm mo dw) =
-    -- currently only one day is supported
-    minuteTicks scaleValue m |> hourTicks scaleValue h
 
 
 minuteTicks : Int -> Cron.Expr Int -> List TimeCell
