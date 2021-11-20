@@ -45,7 +45,7 @@ init : () -> (Model, Cmd Msg)
 init _ =
     let
         initialModel =
-            { crontab = "* * * * * root reboot\n* * * * * user ping"
+            { crontab = ""
             , cronstruct = Ok []
             }
     in
@@ -149,7 +149,7 @@ view model =
             [ Html.textarea
                 [ Attrs.rows 10
                 , Attrs.wrap "off"
-                , Attrs.placeholder "Paste your crontab here"
+                , Attrs.placeholder "Paste your crontab here\n\n* * * * * user command\n..."
                 , Attrs.value model.crontab
                 , Events.onInput Input
                 ]
@@ -162,7 +162,6 @@ view model =
                 ]
                 [ Html.text "Parse" ]
             ]
-        , Html.pre [] [ Html.text (Debug.toString model.cronstruct) ]
         , renderResult model.cronstruct
         ]
 
@@ -208,8 +207,9 @@ renderErrors errors =
 
 renderCronSchedule : Int -> List (String, List TimeCell) -> Html.Html Msg
 renderCronSchedule scaleValue rows =
+    -- NOTE: currently only one day is supported
     let
-        columnsNumber = 24 * 60 // scaleValue -- currently only one day is supported
+        columnsNumber = 24 * 60 // scaleValue
         rowsNumber = List.length rows
         body =
             rows
@@ -219,6 +219,7 @@ renderCronSchedule scaleValue rows =
         Html.div
             [ Attrs.css
                 [ Css.width (Css.vw 90)
+                , Css.margin2 (Css.rem 1) (Css.zero)
                 , gridStyle columnsNumber rowsNumber
                 ]
             ]
@@ -259,51 +260,92 @@ extractErrorMessage (LineError line message) =
 
 generateTimeCells : Int -> Cron.Cron -> List TimeCell
 generateTimeCells scaleValue (Cron.Cron m h dm mo dw) =
-    -- currently only one day is supported
-    minuteTicks scaleValue m |> hourTicks scaleValue h
+    -- NOTE: currently only one day is supported
+    let
+        toTimeCells x = Tuple.pair x (x + 1)
+    in
+        minuteTicks scaleValue m |> hourTicks scaleValue h |> List.map toTimeCells
 
 
 
 -- TIME CELLS
 
 
-minuteTicks : Int -> Cron.Expr Int -> List TimeCell
+minuteTicks : Int -> Cron.Expr Int -> List Int
 minuteTicks scaleValue expr =
     case expr of
         Cron.Single term ->
             termTicks scaleValue term
         Cron.Multiple terms ->
-            List.concat (List.map (termTicks scaleValue) terms)
+            List.concatMap (termTicks scaleValue) terms |> unique
         Cron.Every ->
-            List.map (\x -> Tuple.pair x x) (List.range 1 (60 // scaleValue))
+            List.range 1 (60 // scaleValue)
 
 
-hourTicks : Int -> Cron.Expr Int -> List TimeCell -> List TimeCell
-hourTicks scaleValue expr cells =
+hourTicks : Int -> Cron.Expr Int -> List Int -> List Int
+hourTicks scaleValue expr ticks =
+    -- NOTE: currently only one day is supported
     let
         cellsPerHour = 60 // scaleValue
         offsets = List.range 0 23 |> List.map ((*) cellsPerHour) |> List.map ((+) 1)
+        listAdd y xs = List.map ((+) y) xs
     in
-        cells
+        ticks
             |> List.repeat 24
-            |> List.map2 offsetTicks offsets
+            |> List.map2 listAdd offsets
             |> List.concat
 
 
-termTicks : Int -> Cron.Term a -> List TimeCell
+termTicks : Int -> Cron.Term Int -> List Int
 termTicks scaleValue term =
     case term of
-        Cron.Step start step ->
-            Debug.todo "Implement Cron.Step start step"
+        Cron.Atom atom ->
+            atomTicks scaleValue atom
         Cron.EveryStep step ->
-            Debug.todo "Implement Cron.EveryStep step"
-        Cron.Atom start ->
-            Debug.todo "Implement Cron.Atom start"
+            everyStepTicks scaleValue 0 59 step
+        Cron.Step atom step ->
+            stepTicks scaleValue atom step
 
 
-offsetTicks : Int -> List TimeCell -> List TimeCell
-offsetTicks offset ticks =
+atomTicks : Int -> Cron.Atom Int -> List Int
+atomTicks scaleValue atom =
+    case atom of
+        Cron.Particle single ->
+            List.singleton (single // scaleValue + 1)
+        Cron.Range start stop ->
+            List.range (start // scaleValue + 1) (stop // scaleValue + 1)
+
+
+stepTicks : Int -> Cron.Atom Int -> Int -> List Int
+stepTicks scaleValue atom step =
+    case atom of
+        Cron.Particle start ->
+            everyStepTicks scaleValue start 59 step
+        Cron.Range start stop ->
+            everyStepTicks scaleValue start stop step
+
+
+everyStepTicks : Int -> Int -> Int -> Int -> List Int
+everyStepTicks scaleValue start stop step =
     let
-        fn = (+) offset
+        effectiveStep = max scaleValue step
     in
-        List.map (Tuple.mapBoth fn fn) ticks
+        (stop - start) // effectiveStep
+            |> List.range 0
+            |> List.map (\x -> (x * effectiveStep) // scaleValue)
+            |> List.map ((+) ((start // scaleValue) + 1))
+
+
+
+-- UTILITIES
+
+
+unique : List comparable -> List comparable
+unique list =
+    let
+        step x ys =
+            case ys of
+                [] -> [x]
+                y::_ -> if x == y then ys else x::ys
+    in
+        List.foldr step [] list
