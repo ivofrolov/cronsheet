@@ -149,7 +149,7 @@ view model =
             [ Html.textarea
                 [ Attrs.rows 10
                 , Attrs.wrap "off"
-                , Attrs.placeholder "Paste your crontab here\n\n* * * * * user command\n..."
+                , Attrs.placeholder "Paste your crontab here: * * * * * user command ..."
                 , Attrs.value model.crontab
                 , Events.onInput Input
                 ]

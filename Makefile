@@ -7,4 +7,4 @@ help: ## print this help
 	grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "%-10s %s\n", $$1, $$2}'
 
 build: ## compiles Elm project to Javascript assets
-	elm make src/Main.elm --output=assets/main.js
+	elm make --optimize src/Main.elm --output=assets/main.js
