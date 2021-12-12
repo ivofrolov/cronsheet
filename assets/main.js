@@ -8905,99 +8905,51 @@ var $author$project$Main$extractErrorMessage = function (_v0) {
 				message
 			]));
 };
-var $elm$core$List$repeatHelp = F3(
-	function (result, n, value) {
-		repeatHelp:
-		while (true) {
-			if (n <= 0) {
-				return result;
-			} else {
-				var $temp$result = A2($elm$core$List$cons, value, result),
-					$temp$n = n - 1,
-					$temp$value = value;
-				result = $temp$result;
-				n = $temp$n;
-				value = $temp$value;
-				continue repeatHelp;
-			}
-		}
-	});
-var $elm$core$List$repeat = F2(
-	function (n, value) {
-		return A3($elm$core$List$repeatHelp, _List_Nil, n, value);
-	});
-var $author$project$Main$hourTicks = F3(
-	function (scaleValue, expr, ticks) {
-		var listAdd = F2(
-			function (y, xs) {
-				return A2(
-					$elm$core$List$map,
-					$elm$core$Basics$add(y),
-					xs);
-			});
-		var cellsPerHour = (60 / scaleValue) | 0;
-		var offsets = A2(
-			$elm$core$List$map,
-			$elm$core$Basics$add(1),
-			A2(
-				$elm$core$List$map,
-				$elm$core$Basics$mul(cellsPerHour),
-				A2($elm$core$List$range, 0, 23)));
-		return $elm$core$List$concat(
-			A3(
-				$elm$core$List$map2,
-				listAdd,
-				offsets,
-				A2($elm$core$List$repeat, 24, ticks)));
-	});
-var $author$project$Main$atomTicks = F2(
-	function (scaleValue, atom) {
-		if (!atom.$) {
-			var single = atom.a;
-			return $elm$core$List$singleton(((single / scaleValue) | 0) + 1);
-		} else {
-			var start = atom.a;
-			var stop = atom.b;
-			return A2($elm$core$List$range, ((start / scaleValue) | 0) + 1, ((stop / scaleValue) | 0) + 1);
-		}
-	});
-var $author$project$Main$everyStepTicks = F4(
-	function (scaleValue, start, stop, step) {
-		var effectiveStep = A2($elm$core$Basics$max, scaleValue, step);
+var $author$project$Main$ticks = F4(
+	function (scaledStep, start, stop, step) {
+		var effectiveStep = A2($elm$core$Basics$max, scaledStep, step);
 		return A2(
 			$elm$core$List$map,
-			$elm$core$Basics$add(((start / scaleValue) | 0) + 1),
-			A2(
-				$elm$core$List$map,
-				function (x) {
-					return ((x * effectiveStep) / scaleValue) | 0;
-				},
-				A2($elm$core$List$range, 0, ((stop - start) / effectiveStep) | 0)));
+			function (x) {
+				return (((x * effectiveStep) + start) / scaledStep) | 0;
+			},
+			A2($elm$core$List$range, 0, ((stop - start) / effectiveStep) | 0));
 	});
-var $author$project$Main$stepTicks = F3(
-	function (scaleValue, atom, step) {
+var $author$project$Main$atomTicks = F3(
+	function (real, scaled, atom) {
 		if (!atom.$) {
 			var start = atom.a;
-			return A4($author$project$Main$everyStepTicks, scaleValue, start, 59, step);
+			return A4($author$project$Main$ticks, (real / scaled) | 0, start, start, 1);
 		} else {
 			var start = atom.a;
 			var stop = atom.b;
-			return A4($author$project$Main$everyStepTicks, scaleValue, start, stop, step);
+			return A4($author$project$Main$ticks, (real / scaled) | 0, start, stop, 1);
 		}
 	});
-var $author$project$Main$termTicks = F2(
-	function (scaleValue, term) {
+var $author$project$Main$stepTicks = F4(
+	function (real, scaled, atom, step) {
+		if (!atom.$) {
+			var start = atom.a;
+			return A4($author$project$Main$ticks, (real / scaled) | 0, start, real - 1, step);
+		} else {
+			var start = atom.a;
+			var stop = atom.b;
+			return A4($author$project$Main$ticks, (real / scaled) | 0, start, stop, step);
+		}
+	});
+var $author$project$Main$termTicks = F3(
+	function (real, scaled, term) {
 		switch (term.$) {
 			case 2:
 				var atom = term.a;
-				return A2($author$project$Main$atomTicks, scaleValue, atom);
-			case 1:
-				var step = term.a;
-				return A4($author$project$Main$everyStepTicks, scaleValue, 0, 59, step);
-			default:
+				return A3($author$project$Main$atomTicks, real, scaled, atom);
+			case 0:
 				var atom = term.a;
 				var step = term.b;
-				return A3($author$project$Main$stepTicks, scaleValue, atom, step);
+				return A4($author$project$Main$stepTicks, real, scaled, atom, step);
+			default:
+				var step = term.a;
+				return A4($author$project$Main$ticks, (real / scaled) | 0, 0, real - 1, step);
 		}
 	});
 var $author$project$Main$unique = function (list) {
@@ -9013,41 +8965,74 @@ var $author$project$Main$unique = function (list) {
 		});
 	return A3($elm$core$List$foldr, step, _List_Nil, list);
 };
-var $author$project$Main$minuteTicks = F2(
-	function (scaleValue, expr) {
+var $author$project$Main$exprTicks = F3(
+	function (real, scaled, expr) {
 		switch (expr.$) {
 			case 0:
 				var term = expr.a;
-				return A2($author$project$Main$termTicks, scaleValue, term);
+				return A3($author$project$Main$termTicks, real, scaled, term);
 			case 1:
 				var terms = expr.a;
 				return $author$project$Main$unique(
 					A2(
 						$elm$core$List$concatMap,
-						$author$project$Main$termTicks(scaleValue),
+						A2($author$project$Main$termTicks, real, scaled),
 						terms));
 			default:
-				return A2($elm$core$List$range, 1, (60 / scaleValue) | 0);
+				return A4($author$project$Main$ticks, (real / scaled) | 0, 0, real - 1, 1);
 		}
 	});
-var $author$project$Main$generateTimeCells = F2(
-	function (scaleValue, _v0) {
+var $author$project$Main$hourTicks = F2(
+	function (dayScaleFactor, expr) {
+		return A3($author$project$Main$exprTicks, 24, dayScaleFactor, expr);
+	});
+var $author$project$Main$offset = F2(
+	function (amount, values) {
+		return A2(
+			$elm$core$List$map,
+			$elm$core$Basics$add(amount),
+			values);
+	});
+var $author$project$Main$mapOffset = F2(
+	function (values, amounts) {
+		return A2(
+			$elm$core$List$map,
+			function (amount) {
+				return A2($author$project$Main$offset, amount, values);
+			},
+			amounts);
+	});
+var $author$project$Main$minuteTicks = F2(
+	function (hourScaleFactor, expr) {
+		return A3($author$project$Main$exprTicks, 60, hourScaleFactor, expr);
+	});
+var $author$project$Main$scale = F2(
+	function (factor, values) {
+		return A2(
+			$elm$core$List$map,
+			$elm$core$Basics$mul(factor),
+			values);
+	});
+var $author$project$Main$generateTimeCells = F3(
+	function (dayScaleFactor, hourScaleFactor, _v0) {
 		var m = _v0.a;
 		var h = _v0.b;
 		var dm = _v0.c;
 		var mo = _v0.d;
 		var dw = _v0.e;
-		var toTimeCells = function (x) {
+		var toTimeCell = function (x) {
 			return A2($elm$core$Tuple$pair, x, x + 1);
 		};
+		var minutes = A2($author$project$Main$minuteTicks, hourScaleFactor, m);
+		var hours = A2($author$project$Main$hourTicks, dayScaleFactor, h);
 		return A2(
 			$elm$core$List$map,
-			toTimeCells,
-			A3(
-				$author$project$Main$hourTicks,
-				scaleValue,
-				h,
-				A2($author$project$Main$minuteTicks, scaleValue, m)));
+			toTimeCell,
+			$elm$core$List$concat(
+				A2(
+					$author$project$Main$mapOffset,
+					minutes,
+					A2($author$project$Main$scale, hourScaleFactor, hours))));
 	});
 var $rtfeldman$elm_css$Css$batch = $rtfeldman$elm_css$Css$Preprocess$ApplyStyles;
 var $author$project$Main$gridStyle = F2(
@@ -9120,7 +9105,7 @@ var $author$project$Main$renderCronScheduleCommandCell = F2(
 					$rtfeldman$elm_css$Html$Styled$Attributes$css(
 					_List_fromArray(
 						[
-							A3($author$project$Main$gridCellStyle, rowNumber, 1, 1)
+							A3($author$project$Main$gridCellStyle, rowNumber, 1, 2)
 						]))
 				]),
 			_List_fromArray(
@@ -9505,7 +9490,7 @@ var $author$project$Main$renderCronScheduleTimeCell = F2(
 					$rtfeldman$elm_css$Html$Styled$Attributes$css(
 					_List_fromArray(
 						[
-							A3($author$project$Main$gridCellStyle, rowNumber, columnStart, columnEnd),
+							A3($author$project$Main$gridCellStyle, rowNumber, columnStart + 2, columnEnd + 2),
 							$rtfeldman$elm_css$Css$backgroundColor(
 							$rtfeldman$elm_css$Css$hex('888888'))
 						]))
@@ -9527,9 +9512,8 @@ var $rtfeldman$elm_css$Css$width = $rtfeldman$elm_css$Css$prop1('width');
 var $rtfeldman$elm_css$Css$UnitlessInteger = 0;
 var $rtfeldman$elm_css$Css$zero = {az: 0, ai: 0, J: 0, aj: 0, ak: 0, R: 0, S: 0, aB: 0, L: 0, aT: 0, ar: '', aI: 0, D: '0'};
 var $author$project$Main$renderCronSchedule = F2(
-	function (scaleValue, rows) {
+	function (columnsNumber, rows) {
 		var rowsNumber = $elm$core$List$length(rows);
-		var columnsNumber = ((24 * 60) / scaleValue) | 0;
 		var body = $elm$core$List$concat(
 			A3(
 				$elm$core$List$map2,
@@ -9571,19 +9555,21 @@ var $author$project$Main$renderErrors = function (errors) {
 			]));
 };
 var $author$project$Main$renderResult = function (result) {
-	var scaleValue = 15;
+	var hourScaleFactor = 4;
+	var dayScaleFactor = 24;
 	var extractSchedule = function (_v1) {
 		var rule = _v1.a;
 		var command = _v1.b;
 		return _Utils_Tuple2(
 			command,
-			A2($author$project$Main$generateTimeCells, scaleValue, rule));
+			A3($author$project$Main$generateTimeCells, dayScaleFactor, hourScaleFactor, rule));
 	};
+	var columnsNumber = dayScaleFactor * hourScaleFactor;
 	if (!result.$) {
 		var values = result.a;
 		return A2(
 			$author$project$Main$renderCronSchedule,
-			scaleValue,
+			columnsNumber,
 			A2($elm$core$List$map, extractSchedule, values));
 	} else {
 		var errors = result.a;

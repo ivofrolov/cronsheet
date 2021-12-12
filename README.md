@@ -4,15 +4,16 @@ Provides overview of "busy" slots over a day.
 
 ### Example
 
-For a crontab
+Given a crontab
 
 ```
-30 7 * * * user make coffee
-* * * * * user fping localhost
-5 * * * * root logrotate
+# m h dom mon dow user  command
+ 30 7  *   *   *  user  make coffee
+  * *  *   *   *  user  fping localhost
+  5 *  *   *   *  root  logrotate
 ```
 
-and a grid granularity of 15 minutes, looks something like this
+And a grid granularity of 15 minutes, it looks something like this.
 
 ```
 Command / Time, h.  00  01  02  03  04  05  06  07  08  09  10  11  12   ~ 23  

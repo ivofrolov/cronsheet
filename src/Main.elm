@@ -190,12 +190,17 @@ gridCellStyle rowNumber columnStart columnEnd =
 renderResult : Result (List LineError) (List Cronstruct) -> Html.Html Msg
 renderResult result =
     let
-        scaleValue = 15 -- minutes per grid cell
-        extractSchedule (rule, command) = (command, generateTimeCells scaleValue rule)
+        extractSchedule (rule, command) =
+            (command, generateTimeCells dayScaleFactor hourScaleFactor rule)
+        -- we will render 15 minutes per grid cell in 24 hour row
+        -- so currently only one day is supported
+        hourScaleFactor = 4
+        dayScaleFactor = 24
+        columnsNumber = dayScaleFactor * hourScaleFactor
     in
         case result of
             Ok values ->
-                renderCronSchedule scaleValue (List.map extractSchedule values)
+                renderCronSchedule columnsNumber (List.map extractSchedule values)
             Err errors ->
                 renderErrors (List.map extractErrorMessage errors)
 
@@ -206,10 +211,8 @@ renderErrors errors =
 
 
 renderCronSchedule : Int -> List (String, List TimeCell) -> Html.Html Msg
-renderCronSchedule scaleValue rows =
-    -- NOTE: currently only one day is supported
+renderCronSchedule columnsNumber rows =
     let
-        columnsNumber = 24 * 60 // scaleValue
         rowsNumber = List.length rows
         body =
             rows
@@ -238,7 +241,7 @@ renderCronScheduleRow rowNumber command timeCells =
 renderCronScheduleCommandCell : Int -> String -> Html.Html Msg
 renderCronScheduleCommandCell rowNumber command =
     Html.span
-        [ Attrs.css [ gridCellStyle rowNumber 1 1 ] ]
+        [ Attrs.css [ gridCellStyle rowNumber 1 2 ] ]
         [ Html.text command ]
 
 
@@ -246,7 +249,7 @@ renderCronScheduleTimeCell : Int -> TimeCell -> Html.Html Msg
 renderCronScheduleTimeCell rowNumber (columnStart, columnEnd) =
     Html.div
         [ Attrs.css
-            [ gridCellStyle rowNumber columnStart columnEnd
+            [ gridCellStyle rowNumber (columnStart + 2) (columnEnd + 2)
             , Css.backgroundColor (Css.hex "888888")
             ]
         ]
@@ -258,83 +261,81 @@ extractErrorMessage (LineError line message) =
     String.join ": " [ String.fromInt line, message ]
 
 
-generateTimeCells : Int -> Cron.Cron -> List TimeCell
-generateTimeCells scaleValue (Cron.Cron m h dm mo dw) =
-    -- NOTE: currently only one day is supported
+generateTimeCells : Int -> Int -> Cron.Cron -> List TimeCell
+generateTimeCells dayScaleFactor hourScaleFactor (Cron.Cron m h dm mo dw) =
+    -- currently only one day is supported
     let
-        toTimeCells x = Tuple.pair x (x + 1)
+        toTimeCell x =
+            Tuple.pair x (x + 1)
+        minutes = minuteTicks hourScaleFactor m
+        hours = hourTicks dayScaleFactor h
     in
-        minuteTicks scaleValue m |> hourTicks scaleValue h |> List.map toTimeCells
+        mapOffset minutes (scale hourScaleFactor hours)
+            |> List.concat
+            |> List.map toTimeCell
 
 
 
--- TIME CELLS
+-- TIME TICKS
 
 
 minuteTicks : Int -> Cron.Expr Int -> List Int
-minuteTicks scaleValue expr =
+minuteTicks hourScaleFactor expr =
+    exprTicks 60 hourScaleFactor expr
+
+
+hourTicks : Int -> Cron.Expr Int -> List Int
+hourTicks dayScaleFactor expr =
+    exprTicks 24 dayScaleFactor expr
+
+
+exprTicks : Int -> Int -> Cron.Expr Int -> List Int
+exprTicks real scaled expr =
     case expr of
         Cron.Single term ->
-            termTicks scaleValue term
+            termTicks real scaled term
         Cron.Multiple terms ->
-            List.concatMap (termTicks scaleValue) terms |> unique
+            unique (List.concatMap (termTicks real scaled) terms)
         Cron.Every ->
-            List.range 1 (60 // scaleValue)
+            ticks (real // scaled) 0 (real - 1) 1
 
 
-hourTicks : Int -> Cron.Expr Int -> List Int -> List Int
-hourTicks scaleValue expr ticks =
-    -- NOTE: currently only one day is supported
-    let
-        cellsPerHour = 60 // scaleValue
-        offsets = List.range 0 23 |> List.map ((*) cellsPerHour) |> List.map ((+) 1)
-        listAdd y xs = List.map ((+) y) xs
-    in
-        ticks
-            |> List.repeat 24
-            |> List.map2 listAdd offsets
-            |> List.concat
-
-
-termTicks : Int -> Cron.Term Int -> List Int
-termTicks scaleValue term =
+termTicks : Int -> Int -> Cron.Term Int -> List Int
+termTicks real scaled term =
     case term of
         Cron.Atom atom ->
-            atomTicks scaleValue atom
-        Cron.EveryStep step ->
-            everyStepTicks scaleValue 0 59 step
+            atomTicks real scaled atom
         Cron.Step atom step ->
-            stepTicks scaleValue atom step
+            stepTicks real scaled atom step
+        Cron.EveryStep step ->
+            ticks (real // scaled) 0 (real - 1) step
 
 
-atomTicks : Int -> Cron.Atom Int -> List Int
-atomTicks scaleValue atom =
-    case atom of
-        Cron.Particle single ->
-            List.singleton (single // scaleValue + 1)
-        Cron.Range start stop ->
-            List.range (start // scaleValue + 1) (stop // scaleValue + 1)
-
-
-stepTicks : Int -> Cron.Atom Int -> Int -> List Int
-stepTicks scaleValue atom step =
+atomTicks : Int -> Int -> Cron.Atom Int -> List Int
+atomTicks real scaled atom =
     case atom of
         Cron.Particle start ->
-            everyStepTicks scaleValue start 59 step
+            ticks (real // scaled) start start 1
         Cron.Range start stop ->
-            everyStepTicks scaleValue start stop step
+            ticks (real // scaled) start stop 1
 
 
-everyStepTicks : Int -> Int -> Int -> Int -> List Int
-everyStepTicks scaleValue start stop step =
+stepTicks : Int -> Int -> Cron.Atom Int -> Int -> List Int
+stepTicks real scaled atom step =
+    case atom of
+        Cron.Particle start ->
+            ticks (real // scaled) start (real - 1) step
+        Cron.Range start stop ->
+            ticks (real // scaled) start stop step
+
+
+ticks : Int -> Int -> Int -> Int -> List Int
+ticks scaledStep start stop step =
     let
-        effectiveStep = max scaleValue step
+        effectiveStep = max scaledStep step
     in
-        (stop - start) // effectiveStep
-            |> List.range 0
-            |> List.map (\x -> (x * effectiveStep) // scaleValue)
-            |> List.map ((+) ((start // scaleValue) + 1))
-
+        List.range 0 ((stop - start) // effectiveStep)
+            |> List.map (\x -> (x * effectiveStep + start) // scaledStep)
 
 
 -- UTILITIES
@@ -349,3 +350,18 @@ unique list =
                 y::_ -> if x == y then ys else x::ys
     in
         List.foldr step [] list
+
+
+scale : number -> List number -> List number
+scale factor values =
+    List.map ((*) factor) values
+
+
+offset: number -> List number -> List number
+offset amount values =
+    List.map ((+) amount) values
+
+
+mapOffset : List number -> List number -> List (List number)
+mapOffset values amounts =
+    List.map (\amount -> offset amount values) amounts
