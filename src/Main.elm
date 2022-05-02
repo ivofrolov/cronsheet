@@ -12,10 +12,11 @@ main : Program () Model Msg
 main =
     Browser.document
         { init = init
-        , view = \model -> 
-            { title = "Cronsheet"
-            , body = List.map Html.toUnstyled [ view model ]
-            }
+        , view =
+            \model ->
+                { title = "Cronsheet"
+                , body = List.map Html.toUnstyled [ view model ]
+                }
         , update = update
         , subscriptions = \_ -> Sub.none
         }
@@ -25,10 +26,12 @@ main =
 -- MODEL
 
 
-type alias Cronstruct = (Cron.Cron, String)
+type alias Cronstruct =
+    ( Cron.Cron, String )
 
 
-type alias TimeCell = (Int, Int)
+type alias TimeCell =
+    ( Int, Int )
 
 
 type LineError
@@ -41,7 +44,7 @@ type alias Model =
     }
 
 
-init : () -> (Model, Cmd Msg)
+init : () -> ( Model, Cmd Msg )
 init _ =
     let
         initialModel =
@@ -49,7 +52,7 @@ init _ =
             , cronstruct = Ok []
             }
     in
-        (initialModel, Cmd.none)
+    ( initialModel, Cmd.none )
 
 
 
@@ -61,66 +64,77 @@ type Msg
     | Parse
 
 
-update : Msg -> Model -> (Model, Cmd Msg)
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Input newContent ->
-            ({ model | crontab = newContent }, Cmd.none)
+            ( { model | crontab = newContent }, Cmd.none )
 
         Parse ->
-            ({ model | cronstruct = (parseCrontab model.crontab) }, Cmd.none)
+            ( { model | cronstruct = parseCrontab model.crontab }, Cmd.none )
 
 
 parseCrontab : String -> Result (List LineError) (List Cronstruct)
-parseCrontab crontab = 
+parseCrontab crontab =
     let
-        (errors, values) = partitionByError (List.map parseCronline (String.lines crontab))
+        ( errors, values ) =
+            partitionByError (List.map parseCronline (String.lines crontab))
     in
-        if List.isEmpty errors then
-            Ok values
-        else
-            Err errors
+    if List.isEmpty errors then
+        Ok values
+
+    else
+        Err errors
 
 
 parseCronline : String -> Result String Cronstruct
 parseCronline cronline =
     let
-        rule = parseCronRule cronline
-        command = parseCronCommand cronline
+        rule =
+            parseCronRule cronline
+
+        command =
+            parseCronCommand cronline
     in
-        Result.map2 Tuple.pair rule command
+    Result.map2 Tuple.pair rule command
 
 
 parseCronRule : String -> Result String Cron.Cron
 parseCronRule cronline =
     let
-        cronstring = String.join " " (List.take 5 (String.words cronline))
+        cronstring =
+            String.join " " (List.take 5 (String.words cronline))
     in
-        Result.mapError (\_ -> "Invalid cron string.") (Cron.fromString cronstring)
+    Result.mapError (\_ -> "Invalid cron string.") (Cron.fromString cronstring)
 
 
 parseCronCommand : String -> Result String String
 parseCronCommand cronline =
     let
-        command = String.join " " (List.drop 6 (String.words cronline))
+        command =
+            String.join " " (List.drop 6 (String.words cronline))
     in
-        if String.isEmpty command then
-            Err "No command specified."
-        else
-            Ok command
+    if String.isEmpty command then
+        Err "No command specified."
+
+    else
+        Ok command
 
 
-partitionByError : List (Result String value) -> (List LineError, List value)
+partitionByError : List (Result String value) -> ( List LineError, List value )
 partitionByError list =
     let
-        step (i, x) (errors, values) =
+        step ( i, x ) ( errors, values ) =
             case x of
-                Ok value -> (errors, value :: values)
-                Err error -> (LineError (i + 1) error :: errors, values)
+                Ok value ->
+                    ( errors, value :: values )
+
+                Err error ->
+                    ( LineError (i + 1) error :: errors, values )
     in
-        list
-            |> List.indexedMap Tuple.pair
-            |> List.foldr step ([], [])
+    list
+        |> List.indexedMap Tuple.pair
+        |> List.foldr step ( [], [] )
 
 
 
@@ -156,7 +170,7 @@ view model =
                 []
             , Html.button
                 [ Attrs.disabled (String.isEmpty model.crontab)
-                , Attrs.css 
+                , Attrs.css
                     [ Css.alignSelf Css.flexEnd
                     ]
                 ]
@@ -184,25 +198,32 @@ gridCellStyle rowNumber columnStart columnEnd =
         [ Css.property "grid-row" (String.fromInt rowNumber)
         , Css.property "grid-column-start" (String.fromInt columnStart)
         , Css.property "grid-column-end" (String.fromInt columnEnd)
-        ] 
+        ]
 
 
 renderResult : Result (List LineError) (List Cronstruct) -> Html.Html Msg
 renderResult result =
     let
-        extractSchedule (rule, command) =
-            (command, generateTimeCells dayScaleFactor hourScaleFactor rule)
+        extractSchedule ( rule, command ) =
+            ( command, generateTimeCells dayScaleFactor hourScaleFactor rule )
+
         -- we will render 15 minutes per grid cell in 24 hour row
         -- so currently only one day is supported
-        hourScaleFactor = 4
-        dayScaleFactor = 24
-        columnsNumber = dayScaleFactor * hourScaleFactor
+        hourScaleFactor =
+            4
+
+        dayScaleFactor =
+            24
+
+        columnsNumber =
+            dayScaleFactor * hourScaleFactor
     in
-        case result of
-            Ok values ->
-                renderCronSchedule columnsNumber (List.map extractSchedule values)
-            Err errors ->
-                renderErrors (List.map extractErrorMessage errors)
+    case result of
+        Ok values ->
+            renderCronSchedule columnsNumber (List.map extractSchedule values)
+
+        Err errors ->
+            renderErrors (List.map extractErrorMessage errors)
 
 
 renderErrors : List String -> Html.Html Msg
@@ -210,32 +231,37 @@ renderErrors errors =
     Html.pre [] [ Html.text (String.join "\n" errors) ]
 
 
-renderCronSchedule : Int -> List (String, List TimeCell) -> Html.Html Msg
+renderCronSchedule : Int -> List ( String, List TimeCell ) -> Html.Html Msg
 renderCronSchedule columnsNumber rows =
     let
-        rowsNumber = List.length rows
+        rowsNumber =
+            List.length rows
+
         body =
             rows
-                |> List.map2 (\x (y, z) -> renderCronScheduleRow x y z) (List.range 1 rowsNumber)
+                |> List.map2 (\x ( y, z ) -> renderCronScheduleRow x y z) (List.range 1 rowsNumber)
                 |> List.concat
     in
-        Html.div
-            [ Attrs.css
-                [ Css.width (Css.vw 90)
-                , Css.margin2 (Css.rem 1) (Css.zero)
-                , gridStyle columnsNumber rowsNumber
-                ]
+    Html.div
+        [ Attrs.css
+            [ Css.width (Css.vw 90)
+            , Css.margin2 (Css.rem 1) Css.zero
+            , gridStyle columnsNumber rowsNumber
             ]
-            body
+        ]
+        body
 
 
 renderCronScheduleRow : Int -> String -> List TimeCell -> List (Html.Html Msg)
 renderCronScheduleRow rowNumber command timeCells =
     let
-        renderedCommand = renderCronScheduleCommandCell rowNumber command
-        renderedTime = List.map (renderCronScheduleTimeCell rowNumber) timeCells
+        renderedCommand =
+            renderCronScheduleCommandCell rowNumber command
+
+        renderedTime =
+            List.map (renderCronScheduleTimeCell rowNumber) timeCells
     in
-        renderedCommand :: renderedTime
+    renderedCommand :: renderedTime
 
 
 renderCronScheduleCommandCell : Int -> String -> Html.Html Msg
@@ -246,7 +272,7 @@ renderCronScheduleCommandCell rowNumber command =
 
 
 renderCronScheduleTimeCell : Int -> TimeCell -> Html.Html Msg
-renderCronScheduleTimeCell rowNumber (columnStart, columnEnd) =
+renderCronScheduleTimeCell rowNumber ( columnStart, columnEnd ) =
     Html.div
         [ Attrs.css
             [ gridCellStyle rowNumber (columnStart + 2) (columnEnd + 2)
@@ -267,12 +293,16 @@ generateTimeCells dayScaleFactor hourScaleFactor (Cron.Cron m h dm mo dw) =
     let
         toTimeCell x =
             Tuple.pair x (x + 1)
-        minutes = minuteTicks hourScaleFactor m
-        hours = hourTicks dayScaleFactor h
+
+        minutes =
+            minuteTicks hourScaleFactor m
+
+        hours =
+            hourTicks dayScaleFactor h
     in
-        mapOffset minutes (scale hourScaleFactor hours)
-            |> List.concat
-            |> List.map toTimeCell
+    mapOffset minutes (scale hourScaleFactor hours)
+        |> List.concat
+        |> List.map toTimeCell
 
 
 
@@ -294,8 +324,10 @@ exprTicks real scaled expr =
     case expr of
         Cron.Single term ->
             termTicks real scaled term
+
         Cron.Multiple terms ->
             unique (List.concatMap (termTicks real scaled) terms)
+
         Cron.Every ->
             ticks (real // scaled) 0 (real - 1) 1
 
@@ -305,8 +337,10 @@ termTicks real scaled term =
     case term of
         Cron.Atom atom ->
             atomTicks real scaled atom
+
         Cron.Step atom step ->
             stepTicks real scaled atom step
+
         Cron.EveryStep step ->
             ticks (real // scaled) 0 (real - 1) step
 
@@ -316,6 +350,7 @@ atomTicks real scaled atom =
     case atom of
         Cron.Particle start ->
             ticks (real // scaled) start start 1
+
         Cron.Range start stop ->
             ticks (real // scaled) start stop 1
 
@@ -325,6 +360,7 @@ stepTicks real scaled atom step =
     case atom of
         Cron.Particle start ->
             ticks (real // scaled) start (real - 1) step
+
         Cron.Range start stop ->
             ticks (real // scaled) start stop step
 
@@ -332,10 +368,12 @@ stepTicks real scaled atom step =
 ticks : Int -> Int -> Int -> Int -> List Int
 ticks scaledStep start stop step =
     let
-        effectiveStep = max scaledStep step
+        effectiveStep =
+            max scaledStep step
     in
-        List.range 0 ((stop - start) // effectiveStep)
-            |> List.map (\x -> (x * effectiveStep + start) // scaledStep)
+    List.range 0 ((stop - start) // effectiveStep)
+        |> List.map (\x -> (x * effectiveStep + start) // scaledStep)
+
 
 
 -- UTILITIES
@@ -346,10 +384,17 @@ unique list =
     let
         step x ys =
             case ys of
-                [] -> [x]
-                y::_ -> if x == y then ys else x::ys
+                [] ->
+                    [ x ]
+
+                y :: _ ->
+                    if x == y then
+                        ys
+
+                    else
+                        x :: ys
     in
-        List.foldr step [] list
+    List.foldr step [] list
 
 
 scale : number -> List number -> List number
@@ -357,7 +402,7 @@ scale factor values =
     List.map ((*) factor) values
 
 
-offset: number -> List number -> List number
+offset : number -> List number -> List number
 offset amount values =
     List.map ((+) amount) values
 
