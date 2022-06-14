@@ -8796,266 +8796,9 @@ var $rtfeldman$elm_css$Html$Styled$Internal$css = function (styles) {
 	return A3($rtfeldman$elm_css$VirtualDom$Styled$Attribute, classProperty, styles, classname);
 };
 var $rtfeldman$elm_css$Html$Styled$Attributes$css = $rtfeldman$elm_css$Html$Styled$Internal$css;
-var $elm$json$Json$Encode$bool = _Json_wrap;
-var $rtfeldman$elm_css$VirtualDom$Styled$property = F2(
-	function (key, value) {
-		return A3(
-			$rtfeldman$elm_css$VirtualDom$Styled$Attribute,
-			A2($elm$virtual_dom$VirtualDom$property, key, value),
-			_List_Nil,
-			'');
-	});
-var $rtfeldman$elm_css$Html$Styled$Attributes$boolProperty = F2(
-	function (key, bool) {
-		return A2(
-			$rtfeldman$elm_css$VirtualDom$Styled$property,
-			key,
-			$elm$json$Json$Encode$bool(bool));
-	});
-var $rtfeldman$elm_css$Html$Styled$Attributes$disabled = $rtfeldman$elm_css$Html$Styled$Attributes$boolProperty('disabled');
-var $rtfeldman$elm_css$Css$displayFlex = A2($rtfeldman$elm_css$Css$property, 'display', 'flex');
-var $rtfeldman$elm_css$Html$Styled$div = $rtfeldman$elm_css$Html$Styled$node('div');
-var $rtfeldman$elm_css$Css$flexDirection = $rtfeldman$elm_css$Css$prop1('flex-direction');
-var $rtfeldman$elm_css$Css$flexEnd = $rtfeldman$elm_css$Css$prop1('flex-end');
-var $rtfeldman$elm_css$Css$fontFamily = $rtfeldman$elm_css$Css$prop1('font-family');
-var $rtfeldman$elm_css$Html$Styled$form = $rtfeldman$elm_css$Html$Styled$node('form');
-var $rtfeldman$elm_css$Html$Styled$h1 = $rtfeldman$elm_css$Html$Styled$node('h1');
-var $rtfeldman$elm_css$Css$monospace = {P: 0, D: 'monospace'};
-var $rtfeldman$elm_css$Html$Styled$Events$alwaysStop = function (x) {
-	return _Utils_Tuple2(x, true);
-};
-var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
-	return {$: 1, a: a};
-};
-var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
-var $rtfeldman$elm_css$VirtualDom$Styled$on = F2(
-	function (eventName, handler) {
-		return A3(
-			$rtfeldman$elm_css$VirtualDom$Styled$Attribute,
-			A2($elm$virtual_dom$VirtualDom$on, eventName, handler),
-			_List_Nil,
-			'');
-	});
-var $rtfeldman$elm_css$Html$Styled$Events$stopPropagationOn = F2(
-	function (event, decoder) {
-		return A2(
-			$rtfeldman$elm_css$VirtualDom$Styled$on,
-			event,
-			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
-	});
-var $elm$json$Json$Decode$field = _Json_decodeField;
-var $elm$json$Json$Decode$at = F2(
-	function (fields, decoder) {
-		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
-	});
-var $elm$json$Json$Decode$string = _Json_decodeString;
-var $rtfeldman$elm_css$Html$Styled$Events$targetValue = A2(
-	$elm$json$Json$Decode$at,
-	_List_fromArray(
-		['target', 'value']),
-	$elm$json$Json$Decode$string);
-var $rtfeldman$elm_css$Html$Styled$Events$onInput = function (tagger) {
-	return A2(
-		$rtfeldman$elm_css$Html$Styled$Events$stopPropagationOn,
-		'input',
-		A2(
-			$elm$json$Json$Decode$map,
-			$rtfeldman$elm_css$Html$Styled$Events$alwaysStop,
-			A2($elm$json$Json$Decode$map, tagger, $rtfeldman$elm_css$Html$Styled$Events$targetValue)));
-};
-var $rtfeldman$elm_css$Html$Styled$Events$alwaysPreventDefault = function (msg) {
-	return _Utils_Tuple2(msg, true);
-};
-var $elm$virtual_dom$VirtualDom$MayPreventDefault = function (a) {
-	return {$: 2, a: a};
-};
-var $rtfeldman$elm_css$Html$Styled$Events$preventDefaultOn = F2(
-	function (event, decoder) {
-		return A2(
-			$rtfeldman$elm_css$VirtualDom$Styled$on,
-			event,
-			$elm$virtual_dom$VirtualDom$MayPreventDefault(decoder));
-	});
-var $rtfeldman$elm_css$Html$Styled$Events$onSubmit = function (msg) {
-	return A2(
-		$rtfeldman$elm_css$Html$Styled$Events$preventDefaultOn,
-		'submit',
-		A2(
-			$elm$json$Json$Decode$map,
-			$rtfeldman$elm_css$Html$Styled$Events$alwaysPreventDefault,
-			$elm$json$Json$Decode$succeed(msg)));
-};
-var $rtfeldman$elm_css$Html$Styled$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			$rtfeldman$elm_css$VirtualDom$Styled$property,
-			key,
-			$elm$json$Json$Encode$string(string));
-	});
-var $rtfeldman$elm_css$Html$Styled$Attributes$placeholder = $rtfeldman$elm_css$Html$Styled$Attributes$stringProperty('placeholder');
-var $author$project$Main$extractErrorMessage = function (_v0) {
-	var line = _v0.a;
-	var message = _v0.b;
-	return A2(
-		$elm$core$String$join,
-		': ',
-		_List_fromArray(
-			[
-				$elm$core$String$fromInt(line),
-				message
-			]));
-};
-var $author$project$Main$ticks = F4(
-	function (scaledStep, start, stop, step) {
-		var effectiveStep = A2($elm$core$Basics$max, scaledStep, step);
-		return A2(
-			$elm$core$List$map,
-			function (x) {
-				return (((x * effectiveStep) + start) / scaledStep) | 0;
-			},
-			A2($elm$core$List$range, 0, ((stop - start) / effectiveStep) | 0));
-	});
-var $author$project$Main$atomTicks = F3(
-	function (real, scaled, atom) {
-		if (!atom.$) {
-			var start = atom.a;
-			return A4($author$project$Main$ticks, (real / scaled) | 0, start, start, 1);
-		} else {
-			var start = atom.a;
-			var stop = atom.b;
-			return A4($author$project$Main$ticks, (real / scaled) | 0, start, stop, 1);
-		}
-	});
-var $author$project$Main$stepTicks = F4(
-	function (real, scaled, atom, step) {
-		if (!atom.$) {
-			var start = atom.a;
-			return A4($author$project$Main$ticks, (real / scaled) | 0, start, real - 1, step);
-		} else {
-			var start = atom.a;
-			var stop = atom.b;
-			return A4($author$project$Main$ticks, (real / scaled) | 0, start, stop, step);
-		}
-	});
-var $author$project$Main$termTicks = F3(
-	function (real, scaled, term) {
-		switch (term.$) {
-			case 2:
-				var atom = term.a;
-				return A3($author$project$Main$atomTicks, real, scaled, atom);
-			case 0:
-				var atom = term.a;
-				var step = term.b;
-				return A4($author$project$Main$stepTicks, real, scaled, atom, step);
-			default:
-				var step = term.a;
-				return A4($author$project$Main$ticks, (real / scaled) | 0, 0, real - 1, step);
-		}
-	});
-var $author$project$Main$unique = function (list) {
-	var step = F2(
-		function (x, ys) {
-			if (!ys.b) {
-				return _List_fromArray(
-					[x]);
-			} else {
-				var y = ys.a;
-				return _Utils_eq(x, y) ? ys : A2($elm$core$List$cons, x, ys);
-			}
-		});
-	return A3($elm$core$List$foldr, step, _List_Nil, list);
-};
-var $author$project$Main$exprTicks = F3(
-	function (real, scaled, expr) {
-		switch (expr.$) {
-			case 0:
-				var term = expr.a;
-				return A3($author$project$Main$termTicks, real, scaled, term);
-			case 1:
-				var terms = expr.a;
-				return $author$project$Main$unique(
-					A2(
-						$elm$core$List$concatMap,
-						A2($author$project$Main$termTicks, real, scaled),
-						terms));
-			default:
-				return A4($author$project$Main$ticks, (real / scaled) | 0, 0, real - 1, 1);
-		}
-	});
-var $author$project$Main$hourTicks = F2(
-	function (dayScaleFactor, expr) {
-		return A3($author$project$Main$exprTicks, 24, dayScaleFactor, expr);
-	});
-var $author$project$Main$offset = F2(
-	function (amount, values) {
-		return A2(
-			$elm$core$List$map,
-			$elm$core$Basics$add(amount),
-			values);
-	});
-var $author$project$Main$mapOffset = F2(
-	function (values, amounts) {
-		return A2(
-			$elm$core$List$map,
-			function (amount) {
-				return A2($author$project$Main$offset, amount, values);
-			},
-			amounts);
-	});
-var $author$project$Main$minuteTicks = F2(
-	function (hourScaleFactor, expr) {
-		return A3($author$project$Main$exprTicks, 60, hourScaleFactor, expr);
-	});
-var $author$project$Main$scale = F2(
-	function (factor, values) {
-		return A2(
-			$elm$core$List$map,
-			$elm$core$Basics$mul(factor),
-			values);
-	});
-var $author$project$Main$generateTimeCells = F3(
-	function (dayScaleFactor, hourScaleFactor, _v0) {
-		var m = _v0.a;
-		var h = _v0.b;
-		var dm = _v0.c;
-		var mo = _v0.d;
-		var dw = _v0.e;
-		var toTimeCell = function (x) {
-			return A2($elm$core$Tuple$pair, x, x + 1);
-		};
-		var minutes = A2($author$project$Main$minuteTicks, hourScaleFactor, m);
-		var hours = A2($author$project$Main$hourTicks, dayScaleFactor, h);
-		return A2(
-			$elm$core$List$map,
-			toTimeCell,
-			$elm$core$List$concat(
-				A2(
-					$author$project$Main$mapOffset,
-					minutes,
-					A2($author$project$Main$scale, hourScaleFactor, hours))));
-	});
 var $rtfeldman$elm_css$Css$batch = $rtfeldman$elm_css$Css$Preprocess$ApplyStyles;
-var $author$project$Main$gridStyle = F2(
-	function (columns, rows) {
-		return $rtfeldman$elm_css$Css$batch(
-			_List_fromArray(
-				[
-					A2(
-					$rtfeldman$elm_css$Css$property,
-					'--columns',
-					$elm$core$String$fromInt(columns)),
-					A2(
-					$rtfeldman$elm_css$Css$property,
-					'--rows',
-					$elm$core$String$fromInt(rows)),
-					A2($rtfeldman$elm_css$Css$property, 'display', 'grid'),
-					A2($rtfeldman$elm_css$Css$property, 'row-gap', '1px'),
-					A2($rtfeldman$elm_css$Css$property, 'grid-template-columns', '200px repeat(var(--columns), 1fr)'),
-					A2($rtfeldman$elm_css$Css$property, 'grid-template-rows', 'repeat(var(--rows), 1lh)')
-				]));
-	});
-var $rtfeldman$elm_css$Css$prop2 = F3(
-	function (key, argA, argB) {
+var $rtfeldman$elm_css$Css$prop3 = F4(
+	function (key, argA, argB, argC) {
 		return A2(
 			$rtfeldman$elm_css$Css$property,
 			key,
@@ -9063,59 +8806,9 @@ var $rtfeldman$elm_css$Css$prop2 = F3(
 				$elm$core$String$join,
 				' ',
 				_List_fromArray(
-					[argA.D, argB.D])));
+					[argA.D, argB.D, argC.D])));
 	});
-var $rtfeldman$elm_css$Css$margin2 = $rtfeldman$elm_css$Css$prop2('margin');
-var $rtfeldman$elm_css$Css$RemUnits = 0;
-var $rtfeldman$elm_css$Css$rem = A2($rtfeldman$elm_css$Css$Internal$lengthConverter, 0, 'rem');
-var $author$project$Main$gridCellStyle = F3(
-	function (rowNumber, columnStart, columnEnd) {
-		return $rtfeldman$elm_css$Css$batch(
-			_List_fromArray(
-				[
-					A2(
-					$rtfeldman$elm_css$Css$property,
-					'grid-row',
-					$elm$core$String$fromInt(rowNumber)),
-					A2(
-					$rtfeldman$elm_css$Css$property,
-					'grid-column-start',
-					$elm$core$String$fromInt(columnStart)),
-					A2(
-					$rtfeldman$elm_css$Css$property,
-					'grid-column-end',
-					$elm$core$String$fromInt(columnEnd))
-				]));
-	});
-var $rtfeldman$elm_css$Html$Styled$span = $rtfeldman$elm_css$Html$Styled$node('span');
-var $rtfeldman$elm_css$VirtualDom$Styled$Unstyled = function (a) {
-	return {$: 4, a: a};
-};
-var $rtfeldman$elm_css$VirtualDom$Styled$text = function (str) {
-	return $rtfeldman$elm_css$VirtualDom$Styled$Unstyled(
-		$elm$virtual_dom$VirtualDom$text(str));
-};
-var $rtfeldman$elm_css$Html$Styled$text = $rtfeldman$elm_css$VirtualDom$Styled$text;
-var $author$project$Main$renderCronScheduleCommandCell = F2(
-	function (rowNumber, command) {
-		return A2(
-			$rtfeldman$elm_css$Html$Styled$span,
-			_List_fromArray(
-				[
-					$rtfeldman$elm_css$Html$Styled$Attributes$css(
-					_List_fromArray(
-						[
-							A3($author$project$Main$gridCellStyle, rowNumber, 1, 2)
-						]))
-				]),
-			_List_fromArray(
-				[
-					$rtfeldman$elm_css$Html$Styled$text(command)
-				]));
-	});
-var $rtfeldman$elm_css$Css$backgroundColor = function (c) {
-	return A2($rtfeldman$elm_css$Css$property, 'background-color', c.D);
-};
+var $rtfeldman$elm_css$Css$border3 = $rtfeldman$elm_css$Css$prop3('border');
 var $rtfeldman$elm_css$Css$withPrecedingHash = function (str) {
 	return A2($elm$core$String$startsWith, '#', str) ? str : A2($elm$core$String$cons, '#', str);
 };
@@ -9479,32 +9172,446 @@ var $rtfeldman$elm_css$Css$hex = function (str) {
 	}
 	return $rtfeldman$elm_css$Css$erroneousHex(str);
 };
-var $author$project$Main$renderCronScheduleTimeCell = F2(
-	function (rowNumber, _v0) {
-		var columnStart = _v0.a;
-		var columnEnd = _v0.b;
+var $rtfeldman$elm_css$Css$PxUnits = 0;
+var $rtfeldman$elm_css$Css$px = A2($rtfeldman$elm_css$Css$Internal$lengthConverter, 0, 'px');
+var $rtfeldman$elm_css$Css$solid = {r: 0, W: 0, D: 'solid'};
+var $author$project$Main$defaultBorderStyle = $rtfeldman$elm_css$Css$batch(
+	_List_fromArray(
+		[
+			A3(
+			$rtfeldman$elm_css$Css$border3,
+			$rtfeldman$elm_css$Css$px(1),
+			$rtfeldman$elm_css$Css$solid,
+			$rtfeldman$elm_css$Css$hex('#888'))
+		]));
+var $rtfeldman$elm_css$Css$fontFamily = $rtfeldman$elm_css$Css$prop1('font-family');
+var $rtfeldman$elm_css$Css$monospace = {P: 0, D: 'monospace'};
+var $author$project$Main$defaultFontStyle = $rtfeldman$elm_css$Css$batch(
+	_List_fromArray(
+		[
+			$rtfeldman$elm_css$Css$fontFamily($rtfeldman$elm_css$Css$monospace)
+		]));
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $rtfeldman$elm_css$VirtualDom$Styled$property = F2(
+	function (key, value) {
+		return A3(
+			$rtfeldman$elm_css$VirtualDom$Styled$Attribute,
+			A2($elm$virtual_dom$VirtualDom$property, key, value),
+			_List_Nil,
+			'');
+	});
+var $rtfeldman$elm_css$Html$Styled$Attributes$boolProperty = F2(
+	function (key, bool) {
+		return A2(
+			$rtfeldman$elm_css$VirtualDom$Styled$property,
+			key,
+			$elm$json$Json$Encode$bool(bool));
+	});
+var $rtfeldman$elm_css$Html$Styled$Attributes$disabled = $rtfeldman$elm_css$Html$Styled$Attributes$boolProperty('disabled');
+var $rtfeldman$elm_css$Css$displayFlex = A2($rtfeldman$elm_css$Css$property, 'display', 'flex');
+var $rtfeldman$elm_css$Css$flexDirection = $rtfeldman$elm_css$Css$prop1('flex-direction');
+var $rtfeldman$elm_css$Css$flexEnd = $rtfeldman$elm_css$Css$prop1('flex-end');
+var $rtfeldman$elm_css$Html$Styled$form = $rtfeldman$elm_css$Html$Styled$node('form');
+var $rtfeldman$elm_css$Html$Styled$h1 = $rtfeldman$elm_css$Html$Styled$node('h1');
+var $rtfeldman$elm_css$Html$Styled$main_ = $rtfeldman$elm_css$Html$Styled$node('main');
+var $rtfeldman$elm_css$Html$Styled$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
+};
+var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
+	return {$: 1, a: a};
+};
+var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
+var $rtfeldman$elm_css$VirtualDom$Styled$on = F2(
+	function (eventName, handler) {
+		return A3(
+			$rtfeldman$elm_css$VirtualDom$Styled$Attribute,
+			A2($elm$virtual_dom$VirtualDom$on, eventName, handler),
+			_List_Nil,
+			'');
+	});
+var $rtfeldman$elm_css$Html$Styled$Events$stopPropagationOn = F2(
+	function (event, decoder) {
+		return A2(
+			$rtfeldman$elm_css$VirtualDom$Styled$on,
+			event,
+			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
+	});
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
+	});
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $rtfeldman$elm_css$Html$Styled$Events$targetValue = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	$elm$json$Json$Decode$string);
+var $rtfeldman$elm_css$Html$Styled$Events$onInput = function (tagger) {
+	return A2(
+		$rtfeldman$elm_css$Html$Styled$Events$stopPropagationOn,
+		'input',
+		A2(
+			$elm$json$Json$Decode$map,
+			$rtfeldman$elm_css$Html$Styled$Events$alwaysStop,
+			A2($elm$json$Json$Decode$map, tagger, $rtfeldman$elm_css$Html$Styled$Events$targetValue)));
+};
+var $rtfeldman$elm_css$Html$Styled$Events$alwaysPreventDefault = function (msg) {
+	return _Utils_Tuple2(msg, true);
+};
+var $elm$virtual_dom$VirtualDom$MayPreventDefault = function (a) {
+	return {$: 2, a: a};
+};
+var $rtfeldman$elm_css$Html$Styled$Events$preventDefaultOn = F2(
+	function (event, decoder) {
+		return A2(
+			$rtfeldman$elm_css$VirtualDom$Styled$on,
+			event,
+			$elm$virtual_dom$VirtualDom$MayPreventDefault(decoder));
+	});
+var $rtfeldman$elm_css$Html$Styled$Events$onSubmit = function (msg) {
+	return A2(
+		$rtfeldman$elm_css$Html$Styled$Events$preventDefaultOn,
+		'submit',
+		A2(
+			$elm$json$Json$Decode$map,
+			$rtfeldman$elm_css$Html$Styled$Events$alwaysPreventDefault,
+			$elm$json$Json$Decode$succeed(msg)));
+};
+var $rtfeldman$elm_css$Html$Styled$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			$rtfeldman$elm_css$VirtualDom$Styled$property,
+			key,
+			$elm$json$Json$Encode$string(string));
+	});
+var $rtfeldman$elm_css$Html$Styled$Attributes$placeholder = $rtfeldman$elm_css$Html$Styled$Attributes$stringProperty('placeholder');
+var $author$project$Main$extractErrorMessage = function (_v0) {
+	var line = _v0.a;
+	var message = _v0.b;
+	return A2(
+		$elm$core$String$join,
+		': ',
+		_List_fromArray(
+			[
+				$elm$core$String$fromInt(line),
+				message
+			]));
+};
+var $author$project$Main$ticks = F4(
+	function (scaledStep, start, stop, step) {
+		var effectiveStep = A2($elm$core$Basics$max, scaledStep, step);
+		return A2(
+			$elm$core$List$map,
+			function (x) {
+				return (((x * effectiveStep) + start) / scaledStep) | 0;
+			},
+			A2($elm$core$List$range, 0, ((stop - start) / effectiveStep) | 0));
+	});
+var $author$project$Main$atomTicks = F3(
+	function (real, scaled, atom) {
+		if (!atom.$) {
+			var start = atom.a;
+			return A4($author$project$Main$ticks, (real / scaled) | 0, start, start, 1);
+		} else {
+			var start = atom.a;
+			var stop = atom.b;
+			return A4($author$project$Main$ticks, (real / scaled) | 0, start, stop, 1);
+		}
+	});
+var $author$project$Main$stepTicks = F4(
+	function (real, scaled, atom, step) {
+		if (!atom.$) {
+			var start = atom.a;
+			return A4($author$project$Main$ticks, (real / scaled) | 0, start, real - 1, step);
+		} else {
+			var start = atom.a;
+			var stop = atom.b;
+			return A4($author$project$Main$ticks, (real / scaled) | 0, start, stop, step);
+		}
+	});
+var $author$project$Main$termTicks = F3(
+	function (real, scaled, term) {
+		switch (term.$) {
+			case 2:
+				var atom = term.a;
+				return A3($author$project$Main$atomTicks, real, scaled, atom);
+			case 0:
+				var atom = term.a;
+				var step = term.b;
+				return A4($author$project$Main$stepTicks, real, scaled, atom, step);
+			default:
+				var step = term.a;
+				return A4($author$project$Main$ticks, (real / scaled) | 0, 0, real - 1, step);
+		}
+	});
+var $author$project$Main$unique = function (list) {
+	var step = F2(
+		function (x, ys) {
+			if (!ys.b) {
+				return _List_fromArray(
+					[x]);
+			} else {
+				var y = ys.a;
+				return _Utils_eq(x, y) ? ys : A2($elm$core$List$cons, x, ys);
+			}
+		});
+	return A3($elm$core$List$foldr, step, _List_Nil, list);
+};
+var $author$project$Main$exprTicks = F3(
+	function (real, scaled, expr) {
+		switch (expr.$) {
+			case 0:
+				var term = expr.a;
+				return A3($author$project$Main$termTicks, real, scaled, term);
+			case 1:
+				var terms = expr.a;
+				return $author$project$Main$unique(
+					A2(
+						$elm$core$List$concatMap,
+						A2($author$project$Main$termTicks, real, scaled),
+						terms));
+			default:
+				return A4($author$project$Main$ticks, (real / scaled) | 0, 0, real - 1, 1);
+		}
+	});
+var $author$project$Main$hourTicks = F2(
+	function (dayScaleFactor, expr) {
+		return A3($author$project$Main$exprTicks, 24, dayScaleFactor, expr);
+	});
+var $author$project$Main$offset = F2(
+	function (amount, values) {
+		return A2(
+			$elm$core$List$map,
+			$elm$core$Basics$add(amount),
+			values);
+	});
+var $author$project$Main$mapOffset = F2(
+	function (values, amounts) {
+		return A2(
+			$elm$core$List$map,
+			function (amount) {
+				return A2($author$project$Main$offset, amount, values);
+			},
+			amounts);
+	});
+var $author$project$Main$minuteTicks = F2(
+	function (hourScaleFactor, expr) {
+		return A3($author$project$Main$exprTicks, 60, hourScaleFactor, expr);
+	});
+var $author$project$Main$scale = F2(
+	function (factor, values) {
+		return A2(
+			$elm$core$List$map,
+			$elm$core$Basics$mul(factor),
+			values);
+	});
+var $author$project$Main$generateTimeCells = F3(
+	function (dayScaleFactor, hourScaleFactor, _v0) {
+		var m = _v0.a;
+		var h = _v0.b;
+		var dm = _v0.c;
+		var mo = _v0.d;
+		var dw = _v0.e;
+		var toTimeCell = function (x) {
+			return A2($elm$core$Tuple$pair, x, x + 1);
+		};
+		var minutes = A2($author$project$Main$minuteTicks, hourScaleFactor, m);
+		var hours = A2($author$project$Main$hourTicks, dayScaleFactor, h);
+		return A2(
+			$elm$core$List$map,
+			toTimeCell,
+			$elm$core$List$concat(
+				A2(
+					$author$project$Main$mapOffset,
+					minutes,
+					A2($author$project$Main$scale, hourScaleFactor, hours))));
+	});
+var $rtfeldman$elm_css$Html$Styled$div = $rtfeldman$elm_css$Html$Styled$node('div');
+var $author$project$Main$gridStyle = F2(
+	function (columns, rows) {
+		return $rtfeldman$elm_css$Css$batch(
+			_List_fromArray(
+				[
+					A2(
+					$rtfeldman$elm_css$Css$property,
+					'--columns',
+					$elm$core$String$fromInt(columns)),
+					A2(
+					$rtfeldman$elm_css$Css$property,
+					'--rows',
+					$elm$core$String$fromInt(rows)),
+					A2($rtfeldman$elm_css$Css$property, 'display', 'grid'),
+					A2($rtfeldman$elm_css$Css$property, 'row-gap', '1px'),
+					A2($rtfeldman$elm_css$Css$property, 'grid-template-columns', '33ch repeat(var(--columns), 1fr)'),
+					A2($rtfeldman$elm_css$Css$property, 'grid-template-rows', 'repeat(var(--rows), 1lh)')
+				]));
+	});
+var $rtfeldman$elm_css$Css$prop2 = F3(
+	function (key, argA, argB) {
+		return A2(
+			$rtfeldman$elm_css$Css$property,
+			key,
+			A2(
+				$elm$core$String$join,
+				' ',
+				_List_fromArray(
+					[argA.D, argB.D])));
+	});
+var $rtfeldman$elm_css$Css$margin2 = $rtfeldman$elm_css$Css$prop2('margin');
+var $rtfeldman$elm_css$Css$RemUnits = 0;
+var $rtfeldman$elm_css$Css$rem = A2($rtfeldman$elm_css$Css$Internal$lengthConverter, 0, 'rem');
+var $rtfeldman$elm_css$Css$borderBottom3 = $rtfeldman$elm_css$Css$prop3('border-bottom');
+var $author$project$Main$commandHeaderStyle = $rtfeldman$elm_css$Css$batch(
+	_List_fromArray(
+		[
+			A3(
+			$rtfeldman$elm_css$Css$borderBottom3,
+			$rtfeldman$elm_css$Css$px(1),
+			$rtfeldman$elm_css$Css$solid,
+			$rtfeldman$elm_css$Css$hex('#888'))
+		]));
+var $author$project$Main$gridCellStyle = F4(
+	function (rowStart, rowEnd, columnStart, columnEnd) {
+		return $rtfeldman$elm_css$Css$batch(
+			_List_fromArray(
+				[
+					A2(
+					$rtfeldman$elm_css$Css$property,
+					'grid-row-start',
+					$elm$core$String$fromInt(rowStart)),
+					A2(
+					$rtfeldman$elm_css$Css$property,
+					'grid-row-end',
+					$elm$core$String$fromInt(rowEnd)),
+					A2(
+					$rtfeldman$elm_css$Css$property,
+					'grid-column-start',
+					$elm$core$String$fromInt(columnStart)),
+					A2(
+					$rtfeldman$elm_css$Css$property,
+					'grid-column-end',
+					$elm$core$String$fromInt(columnEnd))
+				]));
+	});
+var $author$project$Main$renderCell = F6(
+	function (rowStart, rowEnd, columnStart, columnEnd, styles, content) {
 		return A2(
 			$rtfeldman$elm_css$Html$Styled$div,
 			_List_fromArray(
 				[
 					$rtfeldman$elm_css$Html$Styled$Attributes$css(
-					_List_fromArray(
-						[
-							A3($author$project$Main$gridCellStyle, rowNumber, columnStart + 2, columnEnd + 2),
-							$rtfeldman$elm_css$Css$backgroundColor(
-							$rtfeldman$elm_css$Css$hex('888888'))
-						]))
+					A2(
+						$elm$core$List$append,
+						styles,
+						_List_fromArray(
+							[
+								A4($author$project$Main$gridCellStyle, rowStart, rowEnd, columnStart, columnEnd)
+							])))
 				]),
-			_List_Nil);
+			content);
 	});
+var $rtfeldman$elm_css$VirtualDom$Styled$Unstyled = function (a) {
+	return {$: 4, a: a};
+};
+var $rtfeldman$elm_css$VirtualDom$Styled$text = function (str) {
+	return $rtfeldman$elm_css$VirtualDom$Styled$Unstyled(
+		$elm$virtual_dom$VirtualDom$text(str));
+};
+var $rtfeldman$elm_css$Html$Styled$text = $rtfeldman$elm_css$VirtualDom$Styled$text;
+var $author$project$Main$renderCronScheduleHeader = function (rowNumber) {
+	var renderTimeSlotHeader = function (h) {
+		return A6(
+			$author$project$Main$renderCell,
+			rowNumber,
+			rowNumber + 1,
+			(h * 4) + 2,
+			((h * 4) + 4) + 2,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$rtfeldman$elm_css$Html$Styled$text(
+					$elm$core$String$fromInt(h))
+				]));
+	};
+	var renderCommandHeader = A6(
+		$author$project$Main$renderCell,
+		rowNumber,
+		rowNumber + 1,
+		1,
+		2,
+		_List_fromArray(
+			[$author$project$Main$commandHeaderStyle]),
+		_List_fromArray(
+			[
+				$rtfeldman$elm_css$Html$Styled$text('Command / Time, hours')
+			]));
+	return A2(
+		$elm$core$List$cons,
+		renderCommandHeader,
+		A2(
+			$elm$core$List$map,
+			renderTimeSlotHeader,
+			A2($elm$core$List$range, 0, 23)));
+};
+var $rtfeldman$elm_css$Css$backgroundColor = function (c) {
+	return A2($rtfeldman$elm_css$Css$property, 'background-color', c.D);
+};
+var $author$project$Main$busyTimeSlotStyle = $rtfeldman$elm_css$Css$batch(
+	_List_fromArray(
+		[
+			$rtfeldman$elm_css$Css$backgroundColor(
+			$rtfeldman$elm_css$Css$hex('#888'))
+		]));
+var $rtfeldman$elm_css$Css$ChUnits = 0;
+var $rtfeldman$elm_css$Css$ch = A2($rtfeldman$elm_css$Css$Internal$lengthConverter, 0, 'ch');
+var $rtfeldman$elm_css$Css$ellipsis = {b0: 0, D: 'ellipsis'};
+var $rtfeldman$elm_css$Css$hidden = {r: 0, al: 0, D: 'hidden', aJ: 0};
+var $rtfeldman$elm_css$Css$noWrap = {ax: 0, aO: 0, D: 'nowrap', O: 0};
+var $rtfeldman$elm_css$Css$overflow = $rtfeldman$elm_css$Css$prop1('overflow');
+var $rtfeldman$elm_css$Css$paddingRight = $rtfeldman$elm_css$Css$prop1('padding-right');
+var $rtfeldman$elm_css$Css$textOverflow = $rtfeldman$elm_css$Css$prop1('text-overflow');
+var $rtfeldman$elm_css$Css$whiteSpace = $rtfeldman$elm_css$Css$prop1('white-space');
+var $author$project$Main$commandStyle = $rtfeldman$elm_css$Css$batch(
+	_List_fromArray(
+		[
+			$rtfeldman$elm_css$Css$whiteSpace($rtfeldman$elm_css$Css$noWrap),
+			$rtfeldman$elm_css$Css$overflow($rtfeldman$elm_css$Css$hidden),
+			$rtfeldman$elm_css$Css$textOverflow($rtfeldman$elm_css$Css$ellipsis),
+			$rtfeldman$elm_css$Css$paddingRight(
+			$rtfeldman$elm_css$Css$ch(1))
+		]));
 var $author$project$Main$renderCronScheduleRow = F3(
 	function (rowNumber, command, timeCells) {
-		var renderedTime = A2(
-			$elm$core$List$map,
-			$author$project$Main$renderCronScheduleTimeCell(rowNumber),
-			timeCells);
-		var renderedCommand = A2($author$project$Main$renderCronScheduleCommandCell, rowNumber, command);
-		return A2($elm$core$List$cons, renderedCommand, renderedTime);
+		var renderTimeSlot = function (_v0) {
+			var columnStart = _v0.a;
+			var columnEnd = _v0.b;
+			return A6(
+				$author$project$Main$renderCell,
+				rowNumber,
+				rowNumber + 1,
+				columnStart + 2,
+				columnEnd + 2,
+				_List_fromArray(
+					[$author$project$Main$busyTimeSlotStyle]),
+				_List_Nil);
+		};
+		var renderCommand = A6(
+			$author$project$Main$renderCell,
+			rowNumber,
+			rowNumber + 1,
+			1,
+			2,
+			_List_fromArray(
+				[$author$project$Main$commandStyle]),
+			_List_fromArray(
+				[
+					$rtfeldman$elm_css$Html$Styled$text(command)
+				]));
+		return A2(
+			$elm$core$List$cons,
+			renderCommand,
+			A2($elm$core$List$map, renderTimeSlot, timeCells));
 	});
 var $rtfeldman$elm_css$Css$VwUnits = 0;
 var $rtfeldman$elm_css$Css$vw = A2($rtfeldman$elm_css$Css$Internal$lengthConverter, 0, 'vw');
@@ -9514,6 +9621,7 @@ var $rtfeldman$elm_css$Css$zero = {az: 0, ai: 0, J: 0, aj: 0, ak: 0, R: 0, S: 0,
 var $author$project$Main$renderCronSchedule = F2(
 	function (columnsNumber, rows) {
 		var rowsNumber = $elm$core$List$length(rows);
+		var header = $author$project$Main$renderCronScheduleHeader(1);
 		var body = $elm$core$List$concat(
 			A3(
 				$elm$core$List$map2,
@@ -9523,7 +9631,7 @@ var $author$project$Main$renderCronSchedule = F2(
 						var z = _v0.b;
 						return A3($author$project$Main$renderCronScheduleRow, x, y, z);
 					}),
-				A2($elm$core$List$range, 1, rowsNumber),
+				A2($elm$core$List$range, 2, rowsNumber + 1),
 				rows));
 		return A2(
 			$rtfeldman$elm_css$Html$Styled$div,
@@ -9541,7 +9649,7 @@ var $author$project$Main$renderCronSchedule = F2(
 							A2($author$project$Main$gridStyle, columnsNumber, rowsNumber)
 						]))
 				]),
-			body);
+			A2($elm$core$List$append, header, body));
 	});
 var $rtfeldman$elm_css$Html$Styled$pre = $rtfeldman$elm_css$Html$Styled$node('pre');
 var $author$project$Main$renderErrors = function (errors) {
@@ -9603,13 +9711,13 @@ var $rtfeldman$elm_css$Html$Styled$Attributes$value = $rtfeldman$elm_css$Html$St
 var $rtfeldman$elm_css$Html$Styled$Attributes$wrap = $rtfeldman$elm_css$Html$Styled$Attributes$stringProperty('wrap');
 var $author$project$Main$view = function (model) {
 	return A2(
-		$rtfeldman$elm_css$Html$Styled$div,
+		$rtfeldman$elm_css$Html$Styled$main_,
 		_List_fromArray(
 			[
 				$rtfeldman$elm_css$Html$Styled$Attributes$css(
 				_List_fromArray(
 					[
-						$rtfeldman$elm_css$Css$fontFamily($rtfeldman$elm_css$Css$monospace),
+						$author$project$Main$defaultFontStyle,
 						$rtfeldman$elm_css$Css$displayFlex,
 						$rtfeldman$elm_css$Css$flexDirection($rtfeldman$elm_css$Css$column),
 						$rtfeldman$elm_css$Css$alignItems($rtfeldman$elm_css$Css$center)
@@ -9646,8 +9754,11 @@ var $author$project$Main$view = function (model) {
 							[
 								$rtfeldman$elm_css$Html$Styled$Attributes$rows(10),
 								$rtfeldman$elm_css$Html$Styled$Attributes$wrap('off'),
-								$rtfeldman$elm_css$Html$Styled$Attributes$placeholder('Paste your crontab here: * * * * * user command ...'),
+								$rtfeldman$elm_css$Html$Styled$Attributes$placeholder('Paste your crontab here and press the button'),
 								$rtfeldman$elm_css$Html$Styled$Attributes$value(model.ac),
+								$rtfeldman$elm_css$Html$Styled$Attributes$css(
+								_List_fromArray(
+									[$author$project$Main$defaultBorderStyle])),
 								$rtfeldman$elm_css$Html$Styled$Events$onInput($author$project$Main$Input)
 							]),
 						_List_Nil),
@@ -9660,12 +9771,14 @@ var $author$project$Main$view = function (model) {
 								$rtfeldman$elm_css$Html$Styled$Attributes$css(
 								_List_fromArray(
 									[
+										$author$project$Main$defaultFontStyle,
+										$author$project$Main$defaultBorderStyle,
 										$rtfeldman$elm_css$Css$alignSelf($rtfeldman$elm_css$Css$flexEnd)
 									]))
 							]),
 						_List_fromArray(
 							[
-								$rtfeldman$elm_css$Html$Styled$text('Parse')
+								$rtfeldman$elm_css$Html$Styled$text('Show the schedule')
 							]))
 					])),
 				$author$project$Main$renderResult(model.aM)

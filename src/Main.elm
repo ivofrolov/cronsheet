@@ -138,14 +138,78 @@ partitionByError list =
 
 
 
+-- STYLES
+
+
+defaultFontStyle : Css.Style
+defaultFontStyle =
+    Css.batch
+        [ Css.fontFamily Css.monospace
+        ]
+
+
+defaultBorderStyle : Css.Style
+defaultBorderStyle =
+    Css.batch
+        [ Css.border3 (Css.px 1) Css.solid (Css.hex "#888")
+        ]
+
+
+gridStyle : Int -> Int -> Css.Style
+gridStyle columns rows =
+    Css.batch
+        [ Css.property "--columns" (String.fromInt columns)
+        , Css.property "--rows" (String.fromInt rows)
+        , Css.property "display" "grid"
+        , Css.property "row-gap" "1px"
+        , Css.property "grid-template-columns" "33ch repeat(var(--columns), 1fr)"
+        , Css.property "grid-template-rows" "repeat(var(--rows), 1lh)"
+        ]
+
+
+gridCellStyle : Int -> Int -> Int -> Int -> Css.Style
+gridCellStyle rowStart rowEnd columnStart columnEnd =
+    Css.batch
+        [ Css.property "grid-row-start" (String.fromInt rowStart)
+        , Css.property "grid-row-end" (String.fromInt rowEnd)
+        , Css.property "grid-column-start" (String.fromInt columnStart)
+        , Css.property "grid-column-end" (String.fromInt columnEnd)
+        ]
+
+
+commandHeaderStyle : Css.Style
+commandHeaderStyle =
+    Css.batch
+        [ Css.borderBottom3 (Css.px 1) Css.solid (Css.hex "#888")
+        ]
+
+
+commandStyle : Css.Style
+commandStyle =
+    Css.batch
+        [ Css.whiteSpace Css.noWrap
+        , Css.overflow Css.hidden
+        , Css.textOverflow Css.ellipsis
+        , Css.paddingRight (Css.ch 1)
+        ]
+
+
+busyTimeSlotStyle : Css.Style
+busyTimeSlotStyle =
+    Css.batch
+        [ Css.backgroundColor (Css.hex "#888")
+        ]
+
+
+
 -- VIEW
 
 
 view : Model -> Html.Html Msg
 view model =
-    Html.div
+    Html.main_
         [ Attrs.css
-            [ Css.fontFamily Css.monospace
+            [ defaultFontStyle
             , Css.displayFlex
             , Css.flexDirection Css.column
             , Css.alignItems Css.center
@@ -163,41 +227,25 @@ view model =
             [ Html.textarea
                 [ Attrs.rows 10
                 , Attrs.wrap "off"
-                , Attrs.placeholder "Paste your crontab here: * * * * * user command ..."
+                , Attrs.placeholder "Paste your crontab here and press the button"
                 , Attrs.value model.crontab
+                , Attrs.css
+                    [ defaultBorderStyle
+                    ]
                 , Events.onInput Input
                 ]
                 []
             , Html.button
                 [ Attrs.disabled (String.isEmpty model.crontab)
                 , Attrs.css
-                    [ Css.alignSelf Css.flexEnd
+                    [ defaultFontStyle
+                    , defaultBorderStyle
+                    , Css.alignSelf Css.flexEnd
                     ]
                 ]
-                [ Html.text "Parse" ]
+                [ Html.text "Show the schedule" ]
             ]
         , renderResult model.cronstruct
-        ]
-
-
-gridStyle : Int -> Int -> Css.Style
-gridStyle columns rows =
-    Css.batch
-        [ Css.property "--columns" (String.fromInt columns)
-        , Css.property "--rows" (String.fromInt rows)
-        , Css.property "display" "grid"
-        , Css.property "row-gap" "1px"
-        , Css.property "grid-template-columns" "200px repeat(var(--columns), 1fr)"
-        , Css.property "grid-template-rows" "repeat(var(--rows), 1lh)"
-        ]
-
-
-gridCellStyle : Int -> Int -> Int -> Css.Style
-gridCellStyle rowNumber columnStart columnEnd =
-    Css.batch
-        [ Css.property "grid-row" (String.fromInt rowNumber)
-        , Css.property "grid-column-start" (String.fromInt columnStart)
-        , Css.property "grid-column-end" (String.fromInt columnEnd)
         ]
 
 
@@ -237,9 +285,12 @@ renderCronSchedule columnsNumber rows =
         rowsNumber =
             List.length rows
 
+        header =
+            renderCronScheduleHeader 1
+
         body =
             rows
-                |> List.map2 (\x ( y, z ) -> renderCronScheduleRow x y z) (List.range 1 rowsNumber)
+                |> List.map2 (\x ( y, z ) -> renderCronScheduleRow x y z) (List.range 2 (rowsNumber + 1))
                 |> List.concat
     in
     Html.div
@@ -249,37 +300,44 @@ renderCronSchedule columnsNumber rows =
             , gridStyle columnsNumber rowsNumber
             ]
         ]
-        body
+        (List.append header body)
+
+
+renderCell : Int -> Int -> Int -> Int -> List Css.Style -> List (Html.Html Msg) -> Html.Html Msg
+renderCell rowStart rowEnd columnStart columnEnd styles content =
+    Html.div
+        [ Attrs.css
+            (List.append
+                styles
+                [ gridCellStyle rowStart rowEnd columnStart columnEnd
+                ]
+            )
+        ]
+        content
+
+
+renderCronScheduleHeader : Int -> List (Html.Html Msg)
+renderCronScheduleHeader rowNumber =
+    let
+        renderCommandHeader =
+            renderCell rowNumber (rowNumber + 1) 1 2 [ commandHeaderStyle ] [ Html.text "Command / Time, hours" ]
+
+        renderTimeSlotHeader h =
+            renderCell rowNumber (rowNumber + 1) (h * 4 + 2) (h * 4 + 4 + 2) [] [ Html.text (String.fromInt h) ]
+    in
+    renderCommandHeader :: List.map renderTimeSlotHeader (List.range 0 23)
 
 
 renderCronScheduleRow : Int -> String -> List TimeCell -> List (Html.Html Msg)
 renderCronScheduleRow rowNumber command timeCells =
     let
-        renderedCommand =
-            renderCronScheduleCommandCell rowNumber command
+        renderCommand =
+            renderCell rowNumber (rowNumber + 1) 1 2 [ commandStyle ] [ Html.text command ]
 
-        renderedTime =
-            List.map (renderCronScheduleTimeCell rowNumber) timeCells
+        renderTimeSlot ( columnStart, columnEnd ) =
+            renderCell rowNumber (rowNumber + 1) (columnStart + 2) (columnEnd + 2) [ busyTimeSlotStyle ] []
     in
-    renderedCommand :: renderedTime
-
-
-renderCronScheduleCommandCell : Int -> String -> Html.Html Msg
-renderCronScheduleCommandCell rowNumber command =
-    Html.span
-        [ Attrs.css [ gridCellStyle rowNumber 1 2 ] ]
-        [ Html.text command ]
-
-
-renderCronScheduleTimeCell : Int -> TimeCell -> Html.Html Msg
-renderCronScheduleTimeCell rowNumber ( columnStart, columnEnd ) =
-    Html.div
-        [ Attrs.css
-            [ gridCellStyle rowNumber (columnStart + 2) (columnEnd + 2)
-            , Css.backgroundColor (Css.hex "888888")
-            ]
-        ]
-        []
+    renderCommand :: List.map renderTimeSlot timeCells
 
 
 extractErrorMessage : LineError -> String
