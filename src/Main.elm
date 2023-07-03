@@ -1,8 +1,8 @@
-module Main exposing (..)
+module Main exposing (main)
 
 import Browser
 import Cron
-import Css as Css
+import Css
 import Html.Styled as Html
 import Html.Styled.Attributes as Attrs
 import Html.Styled.Events as Events
@@ -12,11 +12,7 @@ main : Program () Model Msg
 main =
     Browser.document
         { init = init
-        , view =
-            \model ->
-                { title = "Cronsheet"
-                , body = List.map Html.toUnstyled [ view model ]
-                }
+        , view = view
         , update = update
         , subscriptions = \_ -> Sub.none
         }
@@ -30,27 +26,27 @@ type alias Cronstruct =
     ( Cron.Cron, String )
 
 
+type alias Row =
+    Result String Cronstruct
+
+
+type alias Schedule =
+    List Row
+
+
 type alias TimeCell =
     ( Int, Int )
 
 
-type LineError
-    = LineError Int String
-
-
 type alias Model =
-    { crontab : String
-    , cronstruct : Result (List LineError) (List Cronstruct)
-    }
+    { crontab : String, schedule : Schedule }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
     let
         initialModel =
-            { crontab = ""
-            , cronstruct = Ok []
-            }
+            { crontab = "", schedule = [] }
     in
     ( initialModel, Cmd.none )
 
@@ -71,32 +67,30 @@ update msg model =
             ( { model | crontab = newContent }, Cmd.none )
 
         Parse ->
-            ( { model | cronstruct = parseCrontab model.crontab }, Cmd.none )
+            ( { model | schedule = parseCrontab model.crontab }, Cmd.none )
 
 
-parseCrontab : String -> Result (List LineError) (List Cronstruct)
+parseCrontab : String -> Schedule
 parseCrontab crontab =
-    let
-        ( errors, values ) =
-            partitionByError (List.map parseCronline (String.lines crontab))
-    in
-    if List.isEmpty errors then
-        Ok values
-
-    else
-        Err errors
+    List.filterMap parseCronline (String.lines crontab)
 
 
-parseCronline : String -> Result String Cronstruct
+parseCronline : String -> Maybe Row
 parseCronline cronline =
     let
-        rule =
-            parseCronRule cronline
-
-        command =
-            parseCronCommand cronline
+        isComment string =
+            String.startsWith "#" string
     in
-    Result.map2 Tuple.pair rule command
+    if matchAny [ isComment, String.isEmpty ] (String.trimLeft cronline) then
+        Nothing
+
+    else
+        Just
+            (Result.map2
+                Tuple.pair
+                (parseCronRule cronline)
+                (parseCronCommand cronline)
+            )
 
 
 parseCronRule : String -> Result String Cron.Cron
@@ -105,7 +99,7 @@ parseCronRule cronline =
         cronstring =
             String.join " " (List.take 5 (String.words cronline))
     in
-    Result.mapError (\_ -> "Invalid cron string.") (Cron.fromString cronstring)
+    Result.mapError (\_ -> "invalid cron string") (Cron.fromString cronstring)
 
 
 parseCronCommand : String -> Result String String
@@ -119,22 +113,6 @@ parseCronCommand cronline =
 
     else
         Ok command
-
-
-partitionByError : List (Result String value) -> ( List LineError, List value )
-partitionByError list =
-    let
-        step ( i, x ) ( errors, values ) =
-            case x of
-                Ok value ->
-                    ( errors, value :: values )
-
-                Err error ->
-                    ( LineError (i + 1) error :: errors, values )
-    in
-    list
-        |> List.indexedMap Tuple.pair
-        |> List.foldr step ( [], [] )
 
 
 
@@ -194,6 +172,17 @@ commandStyle =
         ]
 
 
+errorStyle : Css.Style
+errorStyle =
+    Css.batch
+        [ Css.whiteSpace Css.noWrap
+        , Css.overflow Css.hidden
+        , Css.textOverflow Css.ellipsis
+        , Css.paddingRight (Css.ch 1)
+        , Css.color (Css.hex "#f00")
+        ]
+
+
 busyTimeSlotStyle : Css.Style
 busyTimeSlotStyle =
     Css.batch
@@ -205,8 +194,15 @@ busyTimeSlotStyle =
 -- VIEW
 
 
-view : Model -> Html.Html Msg
+view : Model -> Browser.Document Msg
 view model =
+    { title = "Cronsheet"
+    , body = List.map Html.toUnstyled [ render model ]
+    }
+
+
+render : Model -> Html.Html Msg
+render model =
     Html.main_
         [ Attrs.css
             [ defaultFontStyle
@@ -245,18 +241,15 @@ view model =
                 ]
                 [ Html.text "Show the schedule" ]
             ]
-        , renderResult model.cronstruct
+        , renderSchedule model.schedule
         ]
 
 
-renderResult : Result (List LineError) (List Cronstruct) -> Html.Html Msg
-renderResult result =
+{-| Renders grid cells corresponding to 15 minutes slots of a day.
+-}
+renderSchedule : Schedule -> Html.Html Msg
+renderSchedule schedule =
     let
-        extractSchedule ( rule, command ) =
-            ( command, generateTimeCells dayScaleFactor hourScaleFactor rule )
-
-        -- we will render 15 minutes per grid cell in 24 hour row
-        -- so currently only one day is supported
         hourScaleFactor =
             4
 
@@ -265,32 +258,18 @@ renderResult result =
 
         columnsNumber =
             dayScaleFactor * hourScaleFactor
-    in
-    case result of
-        Ok values ->
-            renderCronSchedule columnsNumber (List.map extractSchedule values)
 
-        Err errors ->
-            renderErrors (List.map extractErrorMessage errors)
-
-
-renderErrors : List String -> Html.Html Msg
-renderErrors errors =
-    Html.pre [] [ Html.text (String.join "\n" errors) ]
-
-
-renderCronSchedule : Int -> List ( String, List TimeCell ) -> Html.Html Msg
-renderCronSchedule columnsNumber rows =
-    let
         rowsNumber =
-            List.length rows
+            List.length schedule
 
         header =
-            renderCronScheduleHeader 1
+            renderScheduleHeader 1
 
         body =
-            rows
-                |> List.map2 (\x ( y, z ) -> renderCronScheduleRow x y z) (List.range 2 (rowsNumber + 1))
+            schedule
+                |> List.map2
+                    (\n r -> renderScheduleRow dayScaleFactor hourScaleFactor n r)
+                    (List.range 2 (rowsNumber + 1))
                 |> List.concat
     in
     Html.div
@@ -301,6 +280,40 @@ renderCronSchedule columnsNumber rows =
             ]
         ]
         (List.append header body)
+
+
+renderScheduleHeader : Int -> List (Html.Html Msg)
+renderScheduleHeader rowNumber =
+    let
+        renderCommandHeader =
+            renderCell rowNumber (rowNumber + 1) 1 2 [ commandHeaderStyle ] [ Html.text "Command / Time, hours" ]
+
+        renderTimeSlotHeader h =
+            renderCell rowNumber (rowNumber + 1) (h * 4 + 2) (h * 4 + 4 + 2) [] [ Html.text (String.fromInt h) ]
+    in
+    renderCommandHeader :: List.map renderTimeSlotHeader (List.range 0 23)
+
+
+renderScheduleRow : Int -> Int -> Int -> Row -> List (Html.Html Msg)
+renderScheduleRow dayScaleFactor hourScaleFactor rowNumber row =
+    let
+        renderError error =
+            renderCell rowNumber (rowNumber + 1) 1 2 [ errorStyle ] [ Html.text error ]
+
+        renderCommand command =
+            renderCell rowNumber (rowNumber + 1) 1 2 [ commandStyle ] [ Html.text command ]
+
+        renderTimeSlot ( columnStart, columnEnd ) =
+            renderCell rowNumber (rowNumber + 1) (columnStart + 2) (columnEnd + 2) [ busyTimeSlotStyle ] []
+    in
+    case row of
+        Ok ( rule, command ) ->
+            renderCommand command
+                :: List.map renderTimeSlot
+                    (generateTimeCells dayScaleFactor hourScaleFactor rule)
+
+        Err error ->
+            [ renderError error ]
 
 
 renderCell : Int -> Int -> Int -> Int -> List Css.Style -> List (Html.Html Msg) -> Html.Html Msg
@@ -316,33 +329,8 @@ renderCell rowStart rowEnd columnStart columnEnd styles content =
         content
 
 
-renderCronScheduleHeader : Int -> List (Html.Html Msg)
-renderCronScheduleHeader rowNumber =
-    let
-        renderCommandHeader =
-            renderCell rowNumber (rowNumber + 1) 1 2 [ commandHeaderStyle ] [ Html.text "Command / Time, hours" ]
 
-        renderTimeSlotHeader h =
-            renderCell rowNumber (rowNumber + 1) (h * 4 + 2) (h * 4 + 4 + 2) [] [ Html.text (String.fromInt h) ]
-    in
-    renderCommandHeader :: List.map renderTimeSlotHeader (List.range 0 23)
-
-
-renderCronScheduleRow : Int -> String -> List TimeCell -> List (Html.Html Msg)
-renderCronScheduleRow rowNumber command timeCells =
-    let
-        renderCommand =
-            renderCell rowNumber (rowNumber + 1) 1 2 [ commandStyle ] [ Html.text command ]
-
-        renderTimeSlot ( columnStart, columnEnd ) =
-            renderCell rowNumber (rowNumber + 1) (columnStart + 2) (columnEnd + 2) [ busyTimeSlotStyle ] []
-    in
-    renderCommand :: List.map renderTimeSlot timeCells
-
-
-extractErrorMessage : LineError -> String
-extractErrorMessage (LineError line message) =
-    String.join ": " [ String.fromInt line, message ]
+-- CELLS
 
 
 generateTimeCells : Int -> Int -> Cron.Cron -> List TimeCell
@@ -435,6 +423,11 @@ ticks scaledStep start stop step =
 
 
 -- UTILITIES
+
+
+matchAny : List (a -> Bool) -> a -> Bool
+matchAny requirements value =
+    List.foldl (\f res -> res || f value) False requirements
 
 
 unique : List comparable -> List comparable
