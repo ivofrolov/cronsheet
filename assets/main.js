@@ -5314,7 +5314,7 @@ var $elm$browser$Browser$document = _Browser_document;
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Main$init = function (_v0) {
-	var initialModel = {crontab: '', schedule: _List_Nil};
+	var initialModel = {schedule: _List_Nil};
 	return _Utils_Tuple2(initialModel, $elm$core$Platform$Cmd$none);
 };
 var $elm$core$Platform$Sub$batch = _Platform_batch;
@@ -5338,6 +5338,10 @@ var $elm$core$List$filterMap = F2(
 			xs);
 	});
 var $elm$core$String$lines = _String_lines;
+var $author$project$Main$Job = F2(
+	function (time, command) {
+		return {command: command, time: time};
+	});
 var $elm$core$Result$map2 = F3(
 	function (func, ra, rb) {
 		if (ra.$ === 'Err') {
@@ -5365,10 +5369,6 @@ var $author$project$Main$matchAny = F2(
 				}),
 			false,
 			requirements);
-	});
-var $elm$core$Tuple$pair = F2(
-	function (a, b) {
-		return _Utils_Tuple2(a, b);
 	});
 var $elm$core$List$drop = F2(
 	function (n, list) {
@@ -5400,7 +5400,7 @@ var $author$project$Main$parseCronCommand = function (cronline) {
 			$elm$core$List$drop,
 			6,
 			$elm$core$String$words(cronline)));
-	return $elm$core$String$isEmpty(command) ? $elm$core$Result$Err('No command specified.') : $elm$core$Result$Ok(command);
+	return $elm$core$String$isEmpty(command) ? $elm$core$Result$Err('no command specified') : $elm$core$Result$Ok(command);
 };
 var $skovsboll$elm_crontab$Cron$Cron = F5(
 	function (a, b, c, d, e) {
@@ -6426,7 +6426,7 @@ var $author$project$Main$parseCronline = function (cronline) {
 		$elm$core$String$trimLeft(cronline)) ? $elm$core$Maybe$Nothing : $elm$core$Maybe$Just(
 		A3(
 			$elm$core$Result$map2,
-			$elm$core$Tuple$pair,
+			$author$project$Main$Job,
 			$author$project$Main$parseCronRule(cronline),
 			$author$project$Main$parseCronCommand(cronline)));
 };
@@ -6438,27 +6438,18 @@ var $author$project$Main$parseCrontab = function (crontab) {
 };
 var $author$project$Main$update = F2(
 	function (msg, model) {
-		if (msg.$ === 'Input') {
-			var newContent = msg.a;
-			return _Utils_Tuple2(
-				_Utils_update(
-					model,
-					{crontab: newContent}),
-				$elm$core$Platform$Cmd$none);
-		} else {
-			return _Utils_Tuple2(
-				_Utils_update(
-					model,
-					{
-						schedule: $author$project$Main$parseCrontab(model.crontab)
-					}),
-				$elm$core$Platform$Cmd$none);
-		}
+		var newContent = msg.a;
+		return _Utils_Tuple2(
+			_Utils_update(
+				model,
+				{
+					schedule: $author$project$Main$parseCrontab(newContent)
+				}),
+			$elm$core$Platform$Cmd$none);
 	});
 var $author$project$Main$Input = function (a) {
 	return {$: 'Input', a: a};
 };
-var $author$project$Main$Parse = {$: 'Parse'};
 var $rtfeldman$elm_css$Css$Preprocess$ApplyStyles = function (a) {
 	return {$: 'ApplyStyles', a: a};
 };
@@ -6578,20 +6569,6 @@ var $rtfeldman$elm_css$Css$alignItems = function (fn) {
 		'align-items',
 		fn($rtfeldman$elm_css$Css$Internal$lengthForOverloadedProperty));
 };
-var $rtfeldman$elm_css$Css$alignSelf = function (fn) {
-	return A3(
-		$rtfeldman$elm_css$Css$Internal$getOverloadedProperty,
-		'alignSelf',
-		'align-self',
-		fn($rtfeldman$elm_css$Css$Internal$lengthForOverloadedProperty));
-};
-var $rtfeldman$elm_css$VirtualDom$Styled$Node = F3(
-	function (a, b, c) {
-		return {$: 'Node', a: a, b: b, c: c};
-	});
-var $rtfeldman$elm_css$VirtualDom$Styled$node = $rtfeldman$elm_css$VirtualDom$Styled$Node;
-var $rtfeldman$elm_css$Html$Styled$node = $rtfeldman$elm_css$VirtualDom$Styled$node;
-var $rtfeldman$elm_css$Html$Styled$button = $rtfeldman$elm_css$Html$Styled$node('button');
 var $rtfeldman$elm_css$Css$property = F2(
 	function (key, value) {
 		return $rtfeldman$elm_css$Css$Preprocess$AppendProperty(key + (':' + value));
@@ -8740,26 +8717,14 @@ var $author$project$Main$defaultFontStyle = $rtfeldman$elm_css$Css$batch(
 		[
 			$rtfeldman$elm_css$Css$fontFamily($rtfeldman$elm_css$Css$monospace)
 		]));
-var $elm$json$Json$Encode$bool = _Json_wrap;
-var $rtfeldman$elm_css$VirtualDom$Styled$property = F2(
-	function (key, value) {
-		return A3(
-			$rtfeldman$elm_css$VirtualDom$Styled$Attribute,
-			A2($elm$virtual_dom$VirtualDom$property, key, value),
-			_List_Nil,
-			'');
-	});
-var $rtfeldman$elm_css$Html$Styled$Attributes$boolProperty = F2(
-	function (key, bool) {
-		return A2(
-			$rtfeldman$elm_css$VirtualDom$Styled$property,
-			key,
-			$elm$json$Json$Encode$bool(bool));
-	});
-var $rtfeldman$elm_css$Html$Styled$Attributes$disabled = $rtfeldman$elm_css$Html$Styled$Attributes$boolProperty('disabled');
 var $rtfeldman$elm_css$Css$displayFlex = A2($rtfeldman$elm_css$Css$property, 'display', 'flex');
 var $rtfeldman$elm_css$Css$flexDirection = $rtfeldman$elm_css$Css$prop1('flex-direction');
-var $rtfeldman$elm_css$Css$flexEnd = $rtfeldman$elm_css$Css$prop1('flex-end');
+var $rtfeldman$elm_css$VirtualDom$Styled$Node = F3(
+	function (a, b, c) {
+		return {$: 'Node', a: a, b: b, c: c};
+	});
+var $rtfeldman$elm_css$VirtualDom$Styled$node = $rtfeldman$elm_css$VirtualDom$Styled$Node;
+var $rtfeldman$elm_css$Html$Styled$node = $rtfeldman$elm_css$VirtualDom$Styled$node;
 var $rtfeldman$elm_css$Html$Styled$form = $rtfeldman$elm_css$Html$Styled$node('form');
 var $rtfeldman$elm_css$Html$Styled$h1 = $rtfeldman$elm_css$Html$Styled$node('h1');
 var $rtfeldman$elm_css$Html$Styled$main_ = $rtfeldman$elm_css$Html$Styled$node('main');
@@ -8805,28 +8770,14 @@ var $rtfeldman$elm_css$Html$Styled$Events$onInput = function (tagger) {
 			$rtfeldman$elm_css$Html$Styled$Events$alwaysStop,
 			A2($elm$json$Json$Decode$map, tagger, $rtfeldman$elm_css$Html$Styled$Events$targetValue)));
 };
-var $rtfeldman$elm_css$Html$Styled$Events$alwaysPreventDefault = function (msg) {
-	return _Utils_Tuple2(msg, true);
-};
-var $elm$virtual_dom$VirtualDom$MayPreventDefault = function (a) {
-	return {$: 'MayPreventDefault', a: a};
-};
-var $rtfeldman$elm_css$Html$Styled$Events$preventDefaultOn = F2(
-	function (event, decoder) {
-		return A2(
-			$rtfeldman$elm_css$VirtualDom$Styled$on,
-			event,
-			$elm$virtual_dom$VirtualDom$MayPreventDefault(decoder));
+var $rtfeldman$elm_css$VirtualDom$Styled$property = F2(
+	function (key, value) {
+		return A3(
+			$rtfeldman$elm_css$VirtualDom$Styled$Attribute,
+			A2($elm$virtual_dom$VirtualDom$property, key, value),
+			_List_Nil,
+			'');
 	});
-var $rtfeldman$elm_css$Html$Styled$Events$onSubmit = function (msg) {
-	return A2(
-		$rtfeldman$elm_css$Html$Styled$Events$preventDefaultOn,
-		'submit',
-		A2(
-			$elm$json$Json$Decode$map,
-			$rtfeldman$elm_css$Html$Styled$Events$alwaysPreventDefault,
-			$elm$json$Json$Decode$succeed(msg)));
-};
 var $rtfeldman$elm_css$Html$Styled$Attributes$stringProperty = F2(
 	function (key, string) {
 		return A2(
@@ -9105,6 +9056,10 @@ var $author$project$Main$minuteTicks = F2(
 	function (hourScaleFactor, expr) {
 		return A3($author$project$Main$exprTicks, 60, hourScaleFactor, expr);
 	});
+var $elm$core$Tuple$pair = F2(
+	function (a, b) {
+		return _Utils_Tuple2(a, b);
+	});
 var $author$project$Main$scale = F2(
 	function (factor, values) {
 		return A2(
@@ -9135,9 +9090,9 @@ var $author$project$Main$generateTimeCells = F3(
 	});
 var $author$project$Main$renderScheduleRow = F4(
 	function (dayScaleFactor, hourScaleFactor, rowNumber, row) {
-		var renderTimeSlot = function (_v2) {
-			var columnStart = _v2.a;
-			var columnEnd = _v2.b;
+		var renderTimeSlot = function (_v1) {
+			var columnStart = _v1.a;
+			var columnEnd = _v1.b;
 			return A6(
 				$author$project$Main$renderCell,
 				rowNumber,
@@ -9177,16 +9132,14 @@ var $author$project$Main$renderScheduleRow = F4(
 					]));
 		};
 		if (row.$ === 'Ok') {
-			var _v1 = row.a;
-			var rule = _v1.a;
-			var command = _v1.b;
+			var job = row.a;
 			return A2(
 				$elm$core$List$cons,
-				renderCommand(command),
+				renderCommand(job.command),
 				A2(
 					$elm$core$List$map,
 					renderTimeSlot,
-					A3($author$project$Main$generateTimeCells, dayScaleFactor, hourScaleFactor, rule)));
+					A3($author$project$Main$generateTimeCells, dayScaleFactor, hourScaleFactor, job.time)));
 		} else {
 			var error = row.a;
 			return _List_fromArray(
@@ -9255,7 +9208,6 @@ var $rtfeldman$elm_css$Html$Styled$Attributes$rows = function (n) {
 		$elm$core$String$fromInt(n));
 };
 var $rtfeldman$elm_css$Html$Styled$textarea = $rtfeldman$elm_css$Html$Styled$node('textarea');
-var $rtfeldman$elm_css$Html$Styled$Attributes$value = $rtfeldman$elm_css$Html$Styled$Attributes$stringProperty('value');
 var $rtfeldman$elm_css$Html$Styled$Attributes$wrap = $rtfeldman$elm_css$Html$Styled$Attributes$stringProperty('wrap');
 var $author$project$Main$render = function (model) {
 	return A2(
@@ -9291,8 +9243,7 @@ var $author$project$Main$render = function (model) {
 								$rtfeldman$elm_css$Css$vw(50)),
 								$rtfeldman$elm_css$Css$displayFlex,
 								$rtfeldman$elm_css$Css$flexDirection($rtfeldman$elm_css$Css$column)
-							])),
-						$rtfeldman$elm_css$Html$Styled$Events$onSubmit($author$project$Main$Parse)
+							]))
 					]),
 				_List_fromArray(
 					[
@@ -9302,32 +9253,13 @@ var $author$project$Main$render = function (model) {
 							[
 								$rtfeldman$elm_css$Html$Styled$Attributes$rows(10),
 								$rtfeldman$elm_css$Html$Styled$Attributes$wrap('off'),
-								$rtfeldman$elm_css$Html$Styled$Attributes$placeholder('Paste your crontab here and press the button'),
-								$rtfeldman$elm_css$Html$Styled$Attributes$value(model.crontab),
+								$rtfeldman$elm_css$Html$Styled$Attributes$placeholder('Paste your crontab here'),
 								$rtfeldman$elm_css$Html$Styled$Attributes$css(
 								_List_fromArray(
 									[$author$project$Main$defaultBorderStyle])),
 								$rtfeldman$elm_css$Html$Styled$Events$onInput($author$project$Main$Input)
 							]),
-						_List_Nil),
-						A2(
-						$rtfeldman$elm_css$Html$Styled$button,
-						_List_fromArray(
-							[
-								$rtfeldman$elm_css$Html$Styled$Attributes$disabled(
-								$elm$core$String$isEmpty(model.crontab)),
-								$rtfeldman$elm_css$Html$Styled$Attributes$css(
-								_List_fromArray(
-									[
-										$author$project$Main$defaultFontStyle,
-										$author$project$Main$defaultBorderStyle,
-										$rtfeldman$elm_css$Css$alignSelf($rtfeldman$elm_css$Css$flexEnd)
-									]))
-							]),
-						_List_fromArray(
-							[
-								$rtfeldman$elm_css$Html$Styled$text('Show the schedule')
-							]))
+						_List_Nil)
 					])),
 				$author$project$Main$renderSchedule(model.schedule)
 			]));

@@ -22,12 +22,12 @@ main =
 -- MODEL
 
 
-type alias Cronstruct =
-    ( Cron.Cron, String )
+type alias Job =
+    { time : Cron.Cron, command : String }
 
 
 type alias Row =
-    Result String Cronstruct
+    Result String Job
 
 
 type alias Schedule =
@@ -39,14 +39,14 @@ type alias TimeCell =
 
 
 type alias Model =
-    { crontab : String, schedule : Schedule }
+    { schedule : Schedule }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
     let
         initialModel =
-            { crontab = "", schedule = [] }
+            { schedule = [] }
     in
     ( initialModel, Cmd.none )
 
@@ -57,17 +57,13 @@ init _ =
 
 type Msg
     = Input String
-    | Parse
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Input newContent ->
-            ( { model | crontab = newContent }, Cmd.none )
-
-        Parse ->
-            ( { model | schedule = parseCrontab model.crontab }, Cmd.none )
+            ( { model | schedule = parseCrontab newContent }, Cmd.none )
 
 
 parseCrontab : String -> Schedule
@@ -87,7 +83,7 @@ parseCronline cronline =
     else
         Just
             (Result.map2
-                Tuple.pair
+                Job
                 (parseCronRule cronline)
                 (parseCronCommand cronline)
             )
@@ -109,7 +105,7 @@ parseCronCommand cronline =
             String.join " " (List.drop 6 (String.words cronline))
     in
     if String.isEmpty command then
-        Err "No command specified."
+        Err "no command specified"
 
     else
         Ok command
@@ -218,28 +214,17 @@ render model =
                 , Css.displayFlex
                 , Css.flexDirection Css.column
                 ]
-            , Events.onSubmit Parse
             ]
             [ Html.textarea
                 [ Attrs.rows 10
                 , Attrs.wrap "off"
-                , Attrs.placeholder "Paste your crontab here and press the button"
-                , Attrs.value model.crontab
+                , Attrs.placeholder "Paste your crontab here"
                 , Attrs.css
                     [ defaultBorderStyle
                     ]
                 , Events.onInput Input
                 ]
                 []
-            , Html.button
-                [ Attrs.disabled (String.isEmpty model.crontab)
-                , Attrs.css
-                    [ defaultFontStyle
-                    , defaultBorderStyle
-                    , Css.alignSelf Css.flexEnd
-                    ]
-                ]
-                [ Html.text "Show the schedule" ]
             ]
         , renderSchedule model.schedule
         ]
@@ -307,10 +292,10 @@ renderScheduleRow dayScaleFactor hourScaleFactor rowNumber row =
             renderCell rowNumber (rowNumber + 1) (columnStart + 2) (columnEnd + 2) [ busyTimeSlotStyle ] []
     in
     case row of
-        Ok ( rule, command ) ->
-            renderCommand command
+        Ok job ->
+            renderCommand job.command
                 :: List.map renderTimeSlot
-                    (generateTimeCells dayScaleFactor hourScaleFactor rule)
+                    (generateTimeCells dayScaleFactor hourScaleFactor job.time)
 
         Err error ->
             [ renderError error ]

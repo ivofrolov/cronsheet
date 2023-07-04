@@ -2,7 +2,11 @@
 
 Provides overview of "busy" slots over a day.
 
-### Example
+Go to <https://ivofrolov.github.io/cronsheet/> and paste your crontab.
+
+Or you can clone the repo and open `index.html` by hand. No server needed.
+
+### Overview
 
 Given a crontab
 
